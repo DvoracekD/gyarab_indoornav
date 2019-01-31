@@ -7,19 +7,33 @@ import java.awt.Paint;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
+import cz.gyarab.location.dijkstra.DijkstraAlgorithm;
+import cz.gyarab.location.dijkstra.Edge;
+import cz.gyarab.location.dijkstra.Graph;
+import cz.gyarab.location.dijkstra.MyLine;
+import cz.gyarab.location.dijkstra.Vertex;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,10 +43,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -51,21 +68,25 @@ import javafx.stage.Stage;
 public class Location extends Application{
 
     private static MyPane[][] planes;
-    private static Circle[][] radios;
+    private static MyCircle[][] radios;
     private static final int PLAN_WIDTH = 36;
     private static final int PLAN_HEIGHT = 25;
+    //2,5 metru mezi kontrolními body
+    private static final double DISTANCE_BETWEEN_POINTS = 2.5;
     private static Entry[][] entries = new Entry[PLAN_WIDTH][PLAN_HEIGHT];
 
     private final int SQUARE = 35;
     private final int FRAME_HEIGHT = PLAN_HEIGHT * SQUARE;
     private final int FRAME_WIDTH = PLAN_WIDTH * SQUARE;
 
+    private AnchorPane stackPane;
     private GridPane gridPane;
     private Button activeButton;
     private ImageView imageView;
 
-    private enum Mode{ADD_POINT, ADD_CONSTRAINT}
+    private enum Mode{ADD_POINT, ADD_CONSTRAINT, ADD_SUB_VERTEXES}
     private Mode mode;
+    private ComboBox<String> modeSelector;
 
     public static void main(String[] args) {
         readJson();
@@ -125,7 +146,7 @@ public class Location extends Application{
     @Override
     public void start(Stage primaryStage) throws Exception {
         VBox root = new VBox();
-        ComboBox<String> modeSelector = new ComboBox();
+        modeSelector = new ComboBox();
         modeSelector.getItems().setAll("Algorithm", "Graph generator");
         modeSelector.setValue("Algorithm");
         modeSelector.valueProperty().addListener(new ChangeListener<String>() {
@@ -145,6 +166,7 @@ public class Location extends Application{
         addPointButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                updateGraph();
                 if (activeButton != null)
                     activeButton.setStyle("");
                 addPointButton.setStyle("-fx-background-color:lightgreen");
@@ -164,9 +186,40 @@ public class Location extends Application{
             }
         });
 
+        final Button addSubVertexes = new Button("Add SubVertexes");
+        addSubVertexes.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (activeButton != null)
+                    activeButton.setStyle("");
+                addSubVertexes.setStyle("-fx-background-color:lightgreen");
+                activeButton = addSubVertexes;
+                mode = Mode.ADD_SUB_VERTEXES;
+            }
+        });
+
+        final Button saveButton = new Button("Save");
+        saveButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                saveObj(graph, "map_graph");
+            }
+        });
+
+        final Button findWayButton = new Button("Find Way");
+        findWayButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                findWay(graph.getVertexes().get(graph.getVertexes().size()-1),graph.getVertexes().get(0));
+            }
+        });
+
         ToolBar toolBar = new ToolBar();
         toolBar.getItems().add(addPointButton);
         toolBar.getItems().add(addConstraintButton);
+        toolBar.getItems().add(addSubVertexes);
+        toolBar.getItems().add(saveButton);
+        toolBar.getItems().add(findWayButton);
         //mezere pro zarovnání v toolbaru
         Region spring = new Region();
         HBox.setHgrow(spring, Priority.ALWAYS);
@@ -179,9 +232,9 @@ public class Location extends Application{
         imageView.setPreserveRatio(true);
         imageView.setFitWidth(FRAME_WIDTH);
 
-        StackPane stackPane = new StackPane(imageView);
+        stackPane = new AnchorPane(imageView);
 
-        radios = new Circle[PLAN_WIDTH][PLAN_HEIGHT];
+        radios = new MyCircle[PLAN_WIDTH][PLAN_HEIGHT];
         planes = new MyPane[PLAN_WIDTH][PLAN_HEIGHT];
         gridPane = new GridPane();
 
@@ -199,7 +252,6 @@ public class Location extends Application{
         primaryStage.setScene(new Scene(root, FRAME_WIDTH+10, FRAME_HEIGHT+80));
         primaryStage.show();
 
-        //set graph workspace
         modeSelector.setValue("Graph generator");
     }
 
@@ -249,23 +301,28 @@ public class Location extends Application{
         }
     }
 
-    private Circle constraintCircle;
+    private MyCircle constraintCircle;
+    private Graph graph;
 
     private void setGraphWorkspace() {
+
+        readGraph("map_graph");
+        if (graph == null)
+            graph = new Graph();
         gridPane.getChildren().clear();
         imageView.setOpacity(0.8);
 
         for (int i = 0; i < PLAN_HEIGHT; i++) {
             for (int j = 0; j < PLAN_WIDTH; j++) {
                 //čtverec na pozadí
-                final MyPane node = new MyPane(j, i);
-                node.setMaxSize(SQUARE, SQUARE);
-                node.setMinSize(SQUARE, SQUARE);
-                planes[j][i] = node;
-                gridPane.add(node, j, i);
+                final MyPane square = new MyPane(j, i);
+                square.setMaxSize(SQUARE, SQUARE);
+                square.setMinSize(SQUARE, SQUARE);
+                planes[j][i] = square;
+                gridPane.add(square, j, i);
 
                 //kruh uprostred
-                final Circle circle = new Circle(6, Color.TRANSPARENT);
+                final MyCircle circle = new MyCircle(6, Color.TRANSPARENT);
                 radios[j][i] = circle;
                 circle.strokeProperty().set(Color.BLACK);
                 GridPane.setHalignment(circle, HPos.CENTER);
@@ -282,28 +339,126 @@ public class Location extends Application{
                         switch (mode){
                             case ADD_POINT:
                                 if (!event.isControlDown()){
-                                    circle.setFill(Color.RED);
+                                    showDialog(circle, finalJ, finalI);
+                                    Tooltip.install(circle, new Tooltip(circle.getVertex().getName() != null ? circle.getVertex().getName() : ""));
                                 }
                                 if (event.isControlDown()){
-                                    circle.setFill(Color.TRANSPARENT);
+                                    circle.deleteVertex();
                                 }
                                 break;
                             case ADD_CONSTRAINT:
                                 if (!event.isControlDown()){
-                                    if (constraintCircle == null)constraintCircle = circle;
+                                    if (circle.getVertex() == null)break;
+                                    if (constraintCircle == null) constraintCircle = circle;
                                     else {
-                                        gridPane.add(new Line(constraintCircle.getCenterX(), constraintCircle.getCenterY(), circle.getCenterX(), circle.getCenterY()), finalJ, finalI);
+                                        if (circle.equals(constraintCircle))break;
+                                        Edge edge = new Edge(constraintCircle.getVertex(), circle.getVertex(), computeDistance(constraintCircle.getVertex(), circle.getVertex()));
+                                        addEdge(circle, constraintCircle, edge);
+                                        graph.getEdges().add(edge);
                                         constraintCircle = null;
                                     }
                                 }
-                                if (event.isControlDown()){
-                                    circle.setFill(Color.TRANSPARENT);
+                                break;
+                            case ADD_SUB_VERTEXES:
+                                //v prvním kole výber vrcholu
+                                if (currentVertex == null){
+                                    currentVertex = circle.getVertex();
+                                    coloredCircles.add(circle);
+                                    if (currentVertex != null)circle.setFill(Color.BLUE);
                                 }
+                                //opětovným kliknutím na základní vrchol se výběr zruší
+                                else if (currentVertex == circle.getVertex()){
+                                    coloredCircles.get(0).setFill(Color.RED);
+                                    currentVertex = null;
+                                    for (int k = 1; k < coloredCircles.size(); k++) {
+                                        coloredCircles.get(k).setFill(Color.TRANSPARENT);
+                                    }
+                                    coloredCircles = new ArrayList<>();
+                                }
+                                //do slovníku přidávám možné vrcholy do kterých lze z daného bodu přejít
+                                else {
+                                    String vertexName = finalJ+","+finalI;
+                                    if (subVertexes.get(vertexName)==null){
+                                        subVertexes.put(vertexName, new ArrayList<Vertex>());
+                                    }
+                                    subVertexes.get(vertexName).add(currentVertex);
+                                    circle.setFill(Color.ORANGE);
+                                    coloredCircles.add(circle);
+                                }
+                                break;
                         }
                     }
                 });
             }
         }
+        //updateGraph();
+    }
+
+    //vrchol pro vytváření podvrcholů
+    ArrayList<MyCircle> coloredCircles = new ArrayList<>();
+    Vertex currentVertex;
+    HashMap<String, ArrayList<Vertex>> subVertexes = new HashMap<>();
+
+    private void addEdge(MyCircle circle, MyCircle constraintCircle, Edge edge){
+        Bounds circleBounds = circle.localToParent(circle.getBoundsInLocal());
+        Bounds constraintCircleBounds = constraintCircle.localToParent(constraintCircle.getBoundsInLocal());
+        final MyLine line = new MyLine(
+                (circleBounds.getMaxX()+circleBounds.getMinX())/2,
+                (circleBounds.getMaxY()+circleBounds.getMinY())/2,
+                (constraintCircleBounds.getMaxX()+constraintCircleBounds.getMinX())/2,
+                (constraintCircleBounds.getMaxY()+constraintCircleBounds.getMinY())/2);
+        //line.getStrokeDashArray().addAll(25d, 10d);
+        line.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (event.isControlDown()){
+                    stackPane.getChildren().remove(line);
+                    graph.getEdges().remove(line.getEdge());
+                }
+            }
+        });
+        stackPane.getChildren().add(line);
+        line.setEdge(edge);
+    }
+
+    private void updateGraph(){
+        for (Vertex v : graph.getVertexes()){
+            radios[v.getX()][v.getY()].setVertex(v);
+        }
+        for (Edge e : graph.getEdges()){
+            addEdge(radios[e.getSource().getX()][e.getSource().getY()], radios[e.getDestination().getX()][e.getDestination().getY()], e);
+        }
+    }
+
+    /**
+     * spočítá skutečnou vzdálenost mezi dvěma uzly
+     * @param node1
+     * @param node2
+     * @return
+     */
+    private double computeDistance(Vertex node1, Vertex node2){
+        return Math.sqrt(Math.pow(node1.getX()-node2.getX(), 2) + Math.pow(node1.getY()-node2.getY(), 2))*DISTANCE_BETWEEN_POINTS;
+    }
+
+    private void showDialog(final MyCircle circle, final int x, final int y){
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Name of the node");
+        dialog.setHeaderText("Enter the name of the node");
+        //dialog.setContentText("Please enter your name:");
+
+        Optional<String> result = dialog.showAndWait();
+
+        //Po vložení jména vytvoří uzel grafu a přidá ho do seznamu
+        result.ifPresent(new Consumer<String>() {
+            @Override
+            public void accept(String name) {
+                Vertex vertex = new Vertex(x, y, name);
+                //smaže starý uzel ze seznamu pokud je přepisován
+                graph.getVertexes().remove(circle.getVertex());
+                circle.setVertex(vertex);
+                graph.getVertexes().add(vertex);
+            }
+        });
     }
 
     private void updatePlanes(){
@@ -318,6 +473,32 @@ public class Location extends Application{
                 planes[j][i].getChildren().remove(0);
                 planes[j][i].getChildren().add(new Text(difference+""));
             }
+        }
+    }
+
+    public void readGraph(String name){
+
+        try (FileInputStream fis = new FileInputStream(name)) {
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            graph = (Graph) ois.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void saveObj(Object object, String objName){
+        try(FileOutputStream fos = new FileOutputStream(objName)){
+
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(object);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -342,5 +523,22 @@ public class Location extends Application{
         if (entries[x][y].list.size() != 0)
             difference += ((Test.count - used)*PENALTY);
         return difference;
+    }
+
+    private void findWay(Vertex start, Vertex finish){
+        DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
+        dijkstra.execute(start);
+        LinkedList<Vertex> path = dijkstra.getPath(finish);
+
+        if (path==null){
+            System.out.println("Nelze!");
+            return;
+        }
+
+        for (Vertex vertex : path) {
+            System.out.println(vertex);
+            radios[vertex.getX()][vertex.getY()].setFill(Color.GREEN);
+        }
+        System.out.println(dijkstra.getDistance(finish));
     }
 }
