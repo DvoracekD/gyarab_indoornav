@@ -181,7 +181,7 @@ public class AnalyzeActivity extends AppCompatActivity {
         int difference = 0;
         int used = 0;
         for (SignalEntry entry : entries[x][y].list){
-            if (entry.getSSID().contentEquals("GYM_ARABSKA")) {
+            if (entry.getSSID().contains("GYM_ARABSKA")) {
                 //silá naskenovaného signálu
                 int scanSignal = getAPSig(entry.getSSID(), entry.getBSSID());
                 //pokud bod vidí signál navíc
@@ -193,8 +193,13 @@ public class AnalyzeActivity extends AppCompatActivity {
             }
         }
         //pro ty AP, ktere byly naskenovany ale v referencnim bodu chybí
-        if (entries[x][y].list.size() != 0)
-            difference += ((results.size() - used)*PENALTY);
+        if (entries[x][y].list.size() != 0){
+            int usableSignals = 0;
+            for (SignalEntry e : entries[x][y].list)
+                if (e.getSSID().contains("GYM_ARABSKA"))
+                    usableSignals++;
+            difference += ((usableSignals - used)*PENALTY);
+        }
         return difference;
     }
 

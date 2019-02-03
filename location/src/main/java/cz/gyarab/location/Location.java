@@ -48,6 +48,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
@@ -84,7 +85,7 @@ public class Location extends Application{
     private Button activeButton;
     private ImageView imageView;
 
-    private enum Mode{ADD_POINT, ADD_CONSTRAINT, ADD_SUB_VERTEXES}
+    private enum Mode{ADD_POINT, ADD_CONSTRAINT, ADD_SUB_VERTEXES, FIND_WAY}
     private Mode mode;
     private ComboBox<String> modeSelector;
 
@@ -198,6 +199,19 @@ public class Location extends Application{
             }
         });
 
+        final Button findWayButton = new Button("Find Way");
+        findWayButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (activeButton != null)
+                    activeButton.setStyle("");
+                findWayButton.setStyle("-fx-background-color:lightgreen");
+                activeButton = findWayButton;
+                mode = Mode.FIND_WAY;
+                //findWay(graph.getVertexes().get(graph.getVertexes().size()-1),graph.getVertexes().get(0));
+            }
+        });
+
         final Button saveButton = new Button("Save");
         saveButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
@@ -206,20 +220,13 @@ public class Location extends Application{
             }
         });
 
-        final Button findWayButton = new Button("Find Way");
-        findWayButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                findWay(graph.getVertexes().get(graph.getVertexes().size()-1),graph.getVertexes().get(0));
-            }
-        });
 
         ToolBar toolBar = new ToolBar();
         toolBar.getItems().add(addPointButton);
         toolBar.getItems().add(addConstraintButton);
         toolBar.getItems().add(addSubVertexes);
-        toolBar.getItems().add(saveButton);
         toolBar.getItems().add(findWayButton);
+        toolBar.getItems().add(saveButton);
         //mezere pro zarovnání v toolbaru
         Region spring = new Region();
         HBox.setHgrow(spring, Priority.ALWAYS);
@@ -333,6 +340,8 @@ public class Location extends Application{
                 //po kliknuti
                 final int finalJ = j;
                 final int finalI = i;
+                final String coords = j+","+i;
+
                 circle.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
@@ -343,6 +352,7 @@ public class Location extends Application{
                                     Tooltip.install(circle, new Tooltip(circle.getVertex().getName() != null ? circle.getVertex().getName() : ""));
                                 }
                                 if (event.isControlDown()){
+                                    graph.getVertexes().remove(circle.getVertex());
                                     circle.deleteVertex();
                                 }
                                 break;
@@ -360,30 +370,73 @@ public class Location extends Application{
                                 }
                                 break;
                             case ADD_SUB_VERTEXES:
+                                //při kliknutím pravým tlačítkem se zobrazí pripsane vrcholy
+                                if (event.getButton().equals(MouseButton.SECONDARY)){
+                                    revertColors();
+                                    for (Vertex v : graph.getSubVertexes().get(coords)){
+                                        MyCircle c = radios[v.getX()][v.getY()];
+                                        coloredCircles.add(c);
+                                        c.setColor(Color.YELLOW);
+                                    }
+                                    return;
+                                }
                                 //v prvním kole výber vrcholu
                                 if (currentVertex == null){
                                     currentVertex = circle.getVertex();
-                                    coloredCircles.add(circle);
-                                    if (currentVertex != null)circle.setFill(Color.BLUE);
-                                }
-                                //opětovným kliknutím na základní vrchol se výběr zruší
-                                else if (currentVertex == circle.getVertex()){
-                                    coloredCircles.get(0).setFill(Color.RED);
-                                    currentVertex = null;
-                                    for (int k = 1; k < coloredCircles.size(); k++) {
-                                        coloredCircles.get(k).setFill(Color.TRANSPARENT);
+                                    if (currentVertex != null){
+                                        coloredCircles.add(circle);
+                                        circle.setColor(Color.BLUE);
                                     }
-                                    coloredCircles = new ArrayList<>();
+                                }
+                                //opětovným kliknutím na základní vrchol se výběr potrvdí
+                                else if (currentVertex == circle.getVertex()){
+                                    revertColoredCircles();
                                 }
                                 //do slovníku přidávám možné vrcholy do kterých lze z daného bodu přejít
                                 else {
-                                    String vertexName = finalJ+","+finalI;
-                                    if (subVertexes.get(vertexName)==null){
-                                        subVertexes.put(vertexName, new ArrayList<Vertex>());
+                                    String vertexName = coords;
+                                    //Pokud je stisknuty control, zruší se vyběr daného bodu
+                                    if (event.isControlDown()){
+                                        ArrayList<Vertex> currentAdjVer = graph.getSubVertexes().get(vertexName);
+                                        Vertex vertexOfCurrentCircle = circle.getVertex();
+                                        //pokud se jedna o vrchol cesty
+                                        if (vertexOfCurrentCircle != null && vertexOfCurrentCircle.equals(currentVertex)){
+                                            revertColoredCircles();
+                                        }
+                                        //pokud se jedna o podrazeny vrchol
+                                        else if(currentAdjVer != null){
+                                            currentAdjVer.remove(currentVertex);
+                                            circle.setColor(Color.TRANSPARENT);
+                                        }
+                                        return;
                                     }
-                                    subVertexes.get(vertexName).add(currentVertex);
-                                    circle.setFill(Color.ORANGE);
+                                    if (graph.getSubVertexes().get(vertexName)==null){
+                                        graph.getSubVertexes().put(vertexName, new ArrayList<Vertex>());
+                                    }
+                                    graph.getSubVertexes().get(vertexName).add(currentVertex);
+                                    circle.setColor(Color.ORANGE);
                                     coloredCircles.add(circle);
+                                }
+                                break;
+                            //hledani nejkratsi cesty
+                            case FIND_WAY:
+                                Vertex vertex;
+                                if (circle.getVertex()==null){
+                                    vertex = new Vertex(finalJ, finalI, "");
+                                    graph.getVertexes().add(vertex);
+                                    for (Vertex v : graph.getSubVertexes().get(coords)){
+                                        graph.getEdges().add(new Edge(vertex, v, computeDistance(vertex, v)));
+                                    }
+                                }
+                                else vertex = circle.getVertex();
+
+                                if (firstVertex == null){
+                                    firstVertex = vertex;
+                                    revertColors();
+                                }
+                                else {
+                                    findWay(firstVertex, vertex);
+                                    firstVertex = null;
                                 }
                                 break;
                         }
@@ -394,10 +447,26 @@ public class Location extends Application{
         //updateGraph();
     }
 
+    //první vrchol cesty
+    Vertex firstVertex;
+
     //vrchol pro vytváření podvrcholů
     ArrayList<MyCircle> coloredCircles = new ArrayList<>();
     Vertex currentVertex;
-    HashMap<String, ArrayList<Vertex>> subVertexes = new HashMap<>();
+
+    private void revertColoredCircles(){
+        coloredCircles.get(0).setColor(Color.RED);
+        currentVertex = null;
+        for (int k = 1; k < coloredCircles.size(); k++) {
+            coloredCircles.get(k).setColor(Color.TRANSPARENT);
+        }
+        coloredCircles = new ArrayList<>();
+    }
+
+    private void revertColors(){
+        for (MyCircle c : coloredCircles)c.setPreviousColor();
+        coloredCircles = new ArrayList<>();
+    }
 
     private void addEdge(MyCircle circle, MyCircle constraintCircle, Edge edge){
         Bounds circleBounds = circle.localToParent(circle.getBoundsInLocal());
@@ -537,7 +606,8 @@ public class Location extends Application{
 
         for (Vertex vertex : path) {
             System.out.println(vertex);
-            radios[vertex.getX()][vertex.getY()].setFill(Color.GREEN);
+            radios[vertex.getX()][vertex.getY()].setColor(Color.GREEN);
+            coloredCircles.add(radios[vertex.getX()][vertex.getY()]);
         }
         System.out.println(dijkstra.getDistance(finish));
     }

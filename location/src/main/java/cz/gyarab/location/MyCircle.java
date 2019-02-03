@@ -8,6 +8,8 @@ import javafx.scene.shape.Circle;
 public class MyCircle extends Circle {
 
     private Vertex vertex;
+    private Color previousColor;
+    private Color currentColor;
 
     public MyCircle(double radius, Paint fill) {
         super(radius, fill);
@@ -19,11 +21,24 @@ public class MyCircle extends Circle {
 
     public void setVertex(Vertex vertex) {
         this.vertex = vertex;
-        setFill(Color.RED);
+        setColor(Color.RED);
     }
 
     public void deleteVertex(){
         vertex = null;
-        setFill(Color.TRANSPARENT);
+        setColor(Color.TRANSPARENT);
+    }
+
+    public void setColor(Color color){
+        previousColor = currentColor;
+        currentColor = color;
+        if (color != null)setFill(color);
+    }
+
+    public void setPreviousColor(){
+        Color temp = previousColor;
+        previousColor = currentColor;
+        currentColor = temp;
+        if (currentColor != null)setFill(currentColor);
     }
 }
