@@ -142,12 +142,18 @@ public class AnalyzeActivity extends AppCompatActivity {
     }
 
     private void setRects(){
+        //zjištění počtu používaných AP
+        int usableSignals = 0;
+        for (ScanResult result : results)
+            if (result.SSID.contains("GYM_ARABSKA"))
+                usableSignals++;
+
         for (int i = 0; i < PLAN_HEIGHT; i++){
             for (int j = 0; j < PLAN_WIDTH; j++) {
 
                 buttons[j][i] = new MyRoundButton(this, j, i);
                 planCanvas.addView(buttons[j][i]);
-                int difference = getDifference(j, i);
+                int difference = getDifference(j, i, usableSignals);
                 if (difference == 255)continue;
                 float green = (1-(Math.abs(difference)/255f));
                 if (difference > 255) green = 0;
@@ -174,7 +180,7 @@ public class AnalyzeActivity extends AppCompatActivity {
         }
     }
 
-    private int getDifference(int x, int y){
+    private int getDifference(int x, int y, int usableSignals){
         if (entries[x][y] == null)return 255;
         //pokud vidí víc AP nebo nějaké nevidí, získá 20 trestných bodů
         final int PENALTY = 50;
@@ -185,20 +191,17 @@ public class AnalyzeActivity extends AppCompatActivity {
                 //silá naskenovaného signálu
                 int scanSignal = getAPSig(entry.getSSID(), entry.getBSSID());
                 //pokud bod vidí signál navíc
-                if (scanSignal == 0)
-                    difference += PENALTY;
+                //if (scanSignal == 0)
+                //    difference += PENALTY;
                 //přičte známku za jeden společný AP
-                difference += Math.abs(scanSignal - entry.getSignal());
+                //else
+                    difference += Math.abs(scanSignal - entry.getSignal());
                 used++;
             }
         }
         //pro ty AP, ktere byly naskenovany ale v referencnim bodu chybí
         if (entries[x][y].list.size() != 0){
-            int usableSignals = 0;
-            for (SignalEntry e : entries[x][y].list)
-                if (e.getSSID().contains("GYM_ARABSKA"))
-                    usableSignals++;
-            difference += ((usableSignals - used)*PENALTY);
+            //difference += (Math.abs(usableSignals - used)*PENALTY);
         }
         return difference;
     }
@@ -248,23 +251,23 @@ public class AnalyzeActivity extends AppCompatActivity {
 
     }
 
-//    private void saveState(){
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                try (FileOutputStream fos = openFileOutput("out.tmp", Context.MODE_PRIVATE)) {
-//
-//                    ObjectOutputStream oos = new ObjectOutputStream(fos);
-//                    oos.writeObject(entries);
-//                    runOnUiThread(new Runnable() {
-//                        public void run() {
-//                            Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
-//                        }
-//                    });
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }).start();
-//    }
+    private void saveScan(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try (FileOutputStream fos = openFileOutput("scan.tmp", Context.MODE_PRIVATE)) {
+
+                    ObjectOutputStream oos = new ObjectOutputStream(fos);
+                    oos.writeObject(results);
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
 }
