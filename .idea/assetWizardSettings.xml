@@ -36,9 +36,9 @@
                             <entry key="assetSourceType" value="FILE" />
                             <entry key="color" value="16a7f0" />
                             <entry key="height" value="68" />
-                            <entry key="outputName" value="ic_my_location" />
+                            <entry key="outputName" value="ic_route_off" />
                             <entry key="overrideSize" value="true" />
-                            <entry key="sourceFile" value="D:\Dominik\Documents\Rocnikovka2019\res\myLocation.svg" />
+                            <entry key="sourceFile" value="D:\Dominik\Documents\Rocnikovka2019\res\route_off.svg" />
                             <entry key="width" value="68" />
                           </map>
                         </option>

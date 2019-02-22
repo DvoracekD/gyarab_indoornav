@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * zdroj: http://www.vogella.com/tutorials/JavaAlgorithmsDijkstra/article.html
@@ -23,6 +24,27 @@ public class Graph implements Serializable {
         vertexes = new ArrayList<>();
         edges = new ArrayList<>();
         subVertexes = new HashMap<>();
+    }
+
+    public Vertex getVertex(int x, int y){
+        // pokud jde o subVertex
+        ArrayList<Vertex> adjVertices = subVertexes.get(x+","+y);
+        if (adjVertices != null){
+            Vertex newVertex = new Vertex(x, y, "added");
+            vertexes.add(newVertex);
+            for (Vertex adjVertex : adjVertices)
+                edges.add(new Edge(newVertex, adjVertex));
+            return newVertex;
+        }
+
+        //pokud jde vrchol grafu hlavních cest
+        for (Vertex vertex : vertexes){
+            if (vertex.getX() == x && vertex.getY() == y)
+                return vertex;
+        }
+
+        //pokud se nejedná o vrchol uvnitř budovy
+        return null;
     }
 
     public List<Vertex> getVertexes() {

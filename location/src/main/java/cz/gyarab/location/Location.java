@@ -314,6 +314,7 @@ public class Location extends Application{
     private void setGraphWorkspace() {
 
         readGraph("map_graph");
+        GraphJson.saveJson(graph);
         if (graph == null)
             graph = new Graph();
         gridPane.getChildren().clear();

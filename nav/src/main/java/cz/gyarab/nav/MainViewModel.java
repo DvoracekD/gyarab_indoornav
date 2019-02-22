@@ -2,23 +2,89 @@ package cz.gyarab.nav;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
+import android.content.Context;
+import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
-import com.otaliastudios.zoom.ZoomLayout;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import cz.gyarab.nav.compass.CompassArrow;
-import cz.gyarab.nav.compass.CompassModule;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Scanner;
+
+import cz.gyarab.nav.dijkstra.DijkstraAlgorithm;
+import cz.gyarab.nav.dijkstra.Edge;
+import cz.gyarab.nav.dijkstra.Graph;
+import cz.gyarab.nav.dijkstra.Vertex;
+import cz.gyarab.nav.map.GraphLoader;
+import cz.gyarab.nav.modules.MotionModule;
+import cz.gyarab.nav.modules.CompassArrow;
+import cz.gyarab.nav.modules.CompassModule;
 
 public class MainViewModel extends AndroidViewModel {
 
-    Application app;
+    private CompassArrow compassArrow;
     private CompassModule compassModule;
     private MotionModule motionModule;
-    private CompassArrow compassArrow;
-    private ZoomLayout zoomLayout;
+    private Graph mGraph;
+    private DijkstraAlgorithm dijkstra;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
-        this.app = application;
+        SensorManager sensorManager = (SensorManager) application.getSystemService(Context.SENSOR_SERVICE);
+
+        compassArrow = new CompassArrow(0);
+        compassModule = new CompassModule(sensorManager);
+        motionModule = new MotionModule(sensorManager);
+
+        //vytvoření instance GraphLoaderu
+        GraphLoader graphLoader = new GraphLoader(getApplication());
+        //po nahrání grafu ze souboru je spuštěna metoda listeneru
+        graphLoader.setListener(new GraphLoader.GraphLoadedListener() {
+            @Override
+            public void onGraphLoaded(Graph graph) {
+                //logika po nahrání grafu
+                mGraph = graph;
+                dijkstra = new DijkstraAlgorithm(graph);
+            }
+        });
+        graphLoader.execute("map_graph.json");
+
     }
+
+    public MotionModule getMotionModule() {
+        return motionModule;
+    }
+
+    public CompassModule getCompassModule() {
+        return compassModule;
+    }
+
+    public CompassArrow getCompassArrow() {
+        return compassArrow;
+    }
+
+    public void rebuildDijkstra(){
+        dijkstra = new DijkstraAlgorithm(mGraph);
+    }
+
+    public DijkstraAlgorithm getDijkstra() {
+        return dijkstra;
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        compassArrow = null;
+        compassModule = null;
+        motionModule = null;
+    }
+
 }

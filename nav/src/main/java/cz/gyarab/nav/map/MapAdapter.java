@@ -21,8 +21,19 @@ public class MapAdapter {
     }
 
     public static int[] getPlanField(float x, float y){
-        int[] res = {(int)x/onePlanUnit, (int)y/onePlanUnit};
-        return res;
+        return new int[]{(int)x/onePlanUnit, (int)y/onePlanUnit};
+    }
+
+    public static float[] getMapCoordinates(int x, int y){
+        return new float[]{(float)(x*onePlanUnit+onePlanUnit/2), (float)(y*onePlanUnit+onePlanUnit/2)};
+    }
+
+    public static float getMapCoordinate(int x){
+        return x*onePlanUnit+onePlanUnit/2f;
+    }
+
+    public static int getPlanField(float x){
+        return (int)x/onePlanUnit;
     }
 
 }

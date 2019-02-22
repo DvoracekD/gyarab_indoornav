@@ -14,20 +14,21 @@ import java.util.Set;
  */
 public class DijkstraAlgorithm {
 
-    private final List<Vertex> nodes;
-    private final List<Edge> edges;
+    private final Graph graph;
+    private List<Edge> edges;
     private Set<Vertex> settledNodes;
     private Set<Vertex> unSettledNodes;
     private Map<Vertex, Vertex> predecessors;
     private Map<Vertex, Double> distance;
 
     public DijkstraAlgorithm(Graph graph) {
-        // create a copy of the array so that we can operate on this array
-        this.nodes = new ArrayList<Vertex>(graph.getVertexes());
-        this.edges = new ArrayList<Edge>(graph.getEdges());
+        this.graph = graph;
     }
 
     public void execute(Vertex source) {
+        // create a copy of the array so that we can operate on this array
+        this.edges = new ArrayList<Edge>(graph.getEdges());
+
         settledNodes = new HashSet<Vertex>();
         unSettledNodes = new HashSet<Vertex>();
         distance = new HashMap();
@@ -129,5 +130,9 @@ public class DijkstraAlgorithm {
 
     public double getDistance(Vertex vertex) {
         return distance.get(vertex);
+    }
+
+    public Graph getGraph() {
+        return graph;
     }
 }

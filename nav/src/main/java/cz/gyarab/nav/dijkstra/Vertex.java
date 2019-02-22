@@ -6,12 +6,20 @@ import java.io.Serializable;
  * zdroj: http://www.vogella.com/tutorials/JavaAlgorithmsDijkstra/article.html
  */
 public class Vertex implements Serializable {
+    final private int id;
     final private int x;
     final private int y;
     final private String name;
 
-
     public Vertex(int x, int y, String name) {
+        id = -1;
+        this.x = x;
+        this.y = y;
+        this.name = name;
+    }
+
+    public Vertex(int id, int x, int y, String name) {
+        this.id = id;
         this.x = x;
         this.y = y;
         this.name = name;
@@ -54,5 +62,9 @@ public class Vertex implements Serializable {
 
     public int getY() {
         return y;
+    }
+
+    public int getId() {
+        return id;
     }
 }
