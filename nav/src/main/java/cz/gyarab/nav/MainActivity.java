@@ -34,12 +34,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //inicializace viewModelu aplikace, který udržuje veškerá data
+        //Musí být před voláním super třídy
+        viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         zoomLayout = findViewById(R.id.zoomLayout);
-
-        //inicializace viewModelu aplikace, který udržuje veškerá data
-        viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
 
         //inicializace šipky kompasu
         compassArrow = viewModel.getCompassArrow();
@@ -105,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         //tlačítko pro smazání trasy
         final DrawLayer drawLayer = findViewById(R.id.map);
         routeOffButton = findViewById(R.id.route_off_button);
-        hideRouteOffButton();
+        if (viewModel.routeOffButtonHidden)hideRouteOffButton();
         routeOffButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -160,15 +161,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showRouteOffButton(){
-        Animation expandIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.expand_in);
-        routeOffButton.startAnimation(expandIn);
-        routeOffButton.setVisibility(View.VISIBLE);
+        if (viewModel.routeOffButtonHidden){
+            Animation expandIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.expand_in);
+            routeOffButton.startAnimation(expandIn);
+            routeOffButton.setVisibility(View.VISIBLE);
+            viewModel.routeOffButtonHidden = false;
+        }
     }
 
     public void hideRouteOffButton(){
-        Animation expandOut = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.expand_out);
-        routeOffButton.startAnimation(expandOut);
-        routeOffButton.setVisibility(View.INVISIBLE);
+        if (!viewModel.routeOffButtonHidden){
+            Animation expandOut = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.expand_out);
+            routeOffButton.startAnimation(expandOut);
+            routeOffButton.setVisibility(View.INVISIBLE);
+            viewModel.routeOffButtonHidden = true;
+        }
     }
 
 }

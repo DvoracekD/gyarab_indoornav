@@ -35,6 +35,7 @@ public class MainViewModel extends AndroidViewModel {
     private MotionModule motionModule;
     private Graph mGraph;
     private DijkstraAlgorithm dijkstra;
+    public boolean routeOffButtonHidden = true;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
