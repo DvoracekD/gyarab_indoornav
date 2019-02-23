@@ -11,7 +11,6 @@ import android.view.View;
 
 import java.util.LinkedList;
 
-import cz.gyarab.nav.MainActivity;
 import cz.gyarab.nav.MainViewModel;
 import cz.gyarab.nav.dijkstra.DijkstraAlgorithm;
 import cz.gyarab.nav.dijkstra.Vertex;
@@ -28,6 +27,10 @@ public class DrawLayerViewModel extends AndroidViewModel {
     private float[] points;
     private LinkedList<Vertex> path;
     private boolean canDraw = true;
+    //aktuální cíl cesty
+    private Vertex finish;
+    //poslední pozice hráče
+    private Vertex start;
 
     //listeners
     private MapTouchListener touchListener;
@@ -41,6 +44,8 @@ public class DrawLayerViewModel extends AndroidViewModel {
     public DrawLayerViewModel(@NonNull Application application) {
         super(application);
         initPaints();
+        points = new float[0];
+        path = new LinkedList<>();
 
         //inicializace listeneru
         touchListener = new MapTouchListener();
@@ -86,6 +91,52 @@ public class DrawLayerViewModel extends AndroidViewModel {
         points[pointsI] = MapAdapter.getMapCoordinate(path.get(path.size()-1).getX());
         points[pointsI+1] = MapAdapter.getMapCoordinate(path.get(path.size()-1).getY());
 
+    }
+
+    public void updateFinish(Vertex finish){
+        if (start == null){
+
+            start = mainViewModel.getDijkstra().getGraph().getVertex(
+                    MapAdapter.getPlanField(mainViewModel.getCompassArrow().getCenterX()),
+                    MapAdapter.getPlanField(mainViewModel.getCompassArrow().getCenterY()));
+        }
+        executeDijkstra(start, finish);
+    }
+
+    public void updateRoute(Vertex source){
+
+        if (finish != null)
+            executeDijkstra(source, finish);
+
+    }
+
+    private void executeDijkstra(Vertex start, Vertex finish){
+        //Získání předvytvořeného Dijkstrova algoritmu
+        DijkstraAlgorithm dijkstra = mainViewModel.getDijkstra();
+        if (dijkstra == null) {
+            Log.e("debug", "onClick: Dijkstra = null");
+            return;
+        }
+
+        dijkstra.execute(start);//spuštění algoritmu
+        path = dijkstra.getPath(finish); //získání výsledné cesty
+        //okamžitě po vykreslení cesty se objekt restartuje
+        mainViewModel.rebuildDijkstra();
+
+        if (path == null) {
+            System.out.println(start + " -> " + finish);
+            System.out.println("Nelze!");
+            return;
+        }
+
+        fillPoints(path);
+
+        System.out.println(dijkstra.getDistance(finish));
+        canDraw = true;
+
+        //překreslí obraz
+        if (updateListener != null)
+            updateListener.update();
     }
 
     public Paint getLinePaint() {
@@ -166,29 +217,13 @@ public class DrawLayerViewModel extends AndroidViewModel {
 
             //Výběr počátečního a konečného vrcholu
             //pozice uživatele na mapě
-            Vertex start = dijkstra.getGraph().getVertex(
+            start = dijkstra.getGraph().getVertex(
                     MapAdapter.getPlanField(mainViewModel.getCompassArrow().getCenterX()),
                     MapAdapter.getPlanField(mainViewModel.getCompassArrow().getCenterY()));
             //pozice kliknutí
-            Vertex finish = dijkstra.getGraph().getVertex(plan[0], plan[1]);
-            dijkstra.execute(start);//spuštění algoritmu
-            path = dijkstra.getPath(finish); //získání výsledné cesty
-            //okamžitě po vykreslení cesty se objekt restartuje
-            mainViewModel.rebuildDijkstra();
+            finish = dijkstra.getGraph().getVertex(plan[0], plan[1]);
 
-            if (path == null) {
-                System.out.println(start + " -> " + finish);
-                System.out.println("Nelze!");
-                return;
-            }
-
-            fillPoints(path);
-
-            System.out.println(dijkstra.getDistance(finish));
-            canDraw = true;
-
-            if (updateListener != null)
-                updateListener.update();
+            executeDijkstra(start, finish);
         }
     }
 }

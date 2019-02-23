@@ -6,6 +6,7 @@ import android.content.Context;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.widget.ArrayAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,6 +38,8 @@ public class MainViewModel extends AndroidViewModel {
     private DijkstraAlgorithm dijkstra;
     public boolean routeOffButtonHidden = true;
 
+    private GraphLoader.GraphLoadedListener graphLoadedListener;
+
     public MainViewModel(@NonNull Application application) {
         super(application);
         SensorManager sensorManager = (SensorManager) application.getSystemService(Context.SENSOR_SERVICE);
@@ -54,10 +57,17 @@ public class MainViewModel extends AndroidViewModel {
                 //logika po nahrání grafu
                 mGraph = graph;
                 dijkstra = new DijkstraAlgorithm(graph);
+
+                //zpráva pro hlavní aktivitu
+                graphLoadedListener.onGraphLoaded(graph);
             }
         });
         graphLoader.execute("map_graph.json");
 
+    }
+
+    public void setGraphLoadedListener(GraphLoader.GraphLoadedListener graphLoadedListener) {
+        this.graphLoadedListener = graphLoadedListener;
     }
 
     public MotionModule getMotionModule() {

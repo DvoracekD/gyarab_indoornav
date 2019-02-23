@@ -168,10 +168,7 @@ public class Location extends Application{
             @Override
             public void handle(MouseEvent event) {
                 updateGraph();
-                if (activeButton != null)
-                    activeButton.setStyle("");
-                addPointButton.setStyle("-fx-background-color:lightgreen");
-                activeButton = addPointButton;
+                setNewActiveButton(addPointButton);
                 mode = Mode.ADD_POINT;
             }
         });
@@ -179,10 +176,7 @@ public class Location extends Application{
         addConstraintButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (activeButton != null)
-                    activeButton.setStyle("");
-                addConstraintButton.setStyle("-fx-background-color:lightgreen");
-                activeButton = addConstraintButton;
+                setNewActiveButton(addConstraintButton);
                 mode = Mode.ADD_CONSTRAINT;
             }
         });
@@ -191,10 +185,7 @@ public class Location extends Application{
         addSubVertexes.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (activeButton != null)
-                    activeButton.setStyle("");
-                addSubVertexes.setStyle("-fx-background-color:lightgreen");
-                activeButton = addSubVertexes;
+                setNewActiveButton(addSubVertexes);
                 mode = Mode.ADD_SUB_VERTEXES;
             }
         });
@@ -203,12 +194,27 @@ public class Location extends Application{
         findWayButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (activeButton != null)
-                    activeButton.setStyle("");
-                findWayButton.setStyle("-fx-background-color:lightgreen");
-                activeButton = findWayButton;
+                setNewActiveButton(findWayButton);
                 mode = Mode.FIND_WAY;
                 //findWay(graph.getVertexes().get(graph.getVertexes().size()-1),graph.getVertexes().get(0));
+            }
+        });
+
+        final Button setNamesButton = new Button("Set Names");
+        setNamesButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                setNewActiveButton(setNamesButton);
+                mode = Mode.ADD_POINT;
+                for (int i = 0; i < PLAN_HEIGHT; i++) {
+                    for (int j = 0; j < PLAN_WIDTH; j++) {
+                        MyCircle circle = radios[j][i];
+                        if (circle.getVertex() != null && !circle.getVertex().getName().equals("")){
+                            circle.setColor(Color.LIGHTSKYBLUE);
+                            coloredCircles.add(circle);
+                        }
+                    }
+                }
             }
         });
 
@@ -217,6 +223,7 @@ public class Location extends Application{
             @Override
             public void handle(MouseEvent event) {
                 saveObj(graph, "map_graph");
+                GraphJson.saveJson(graph);
             }
         });
 
@@ -226,6 +233,7 @@ public class Location extends Application{
         toolBar.getItems().add(addConstraintButton);
         toolBar.getItems().add(addSubVertexes);
         toolBar.getItems().add(findWayButton);
+        toolBar.getItems().add(setNamesButton);
         toolBar.getItems().add(saveButton);
         //mezere pro zarovnání v toolbaru
         Region spring = new Region();
@@ -308,13 +316,20 @@ public class Location extends Application{
         }
     }
 
+    private void setNewActiveButton(Button newActiveButton){
+        if (activeButton != null)
+            activeButton.setStyle("");
+        newActiveButton.setStyle("-fx-background-color:lightgreen");
+        activeButton = newActiveButton;
+    }
+
     private MyCircle constraintCircle;
     private Graph graph;
 
     private void setGraphWorkspace() {
 
-        readGraph("map_graph");
-        GraphJson.saveJson(graph);
+        //readGraph("map_graph");
+        graph = GraphJson.readJson();
         if (graph == null)
             graph = new Graph();
         gridPane.getChildren().clear();
@@ -374,6 +389,10 @@ public class Location extends Application{
                                 //při kliknutím pravým tlačítkem se zobrazí pripsane vrcholy
                                 if (event.getButton().equals(MouseButton.SECONDARY)){
                                     revertColors();
+                                    if (graph.getSubVertexes().get(coords)== null){
+                                        System.out.println("Chybí subvertexy");
+                                        return;
+                                    }
                                     for (Vertex v : graph.getSubVertexes().get(coords)){
                                         MyCircle c = radios[v.getX()][v.getY()];
                                         coloredCircles.add(c);
@@ -511,7 +530,9 @@ public class Location extends Application{
     }
 
     private void showDialog(final MyCircle circle, final int x, final int y){
-        TextInputDialog dialog = new TextInputDialog();
+        //pokud kroužek nemá přiřazený vrchol, defaultní hodnota jména bude ""
+        String name = circle.getVertex() == null ? "" : circle.getVertex().getName();
+        TextInputDialog dialog = new TextInputDialog(name);
         dialog.setTitle("Name of the node");
         dialog.setHeaderText("Enter the name of the node");
         //dialog.setContentText("Please enter your name:");
@@ -522,11 +543,15 @@ public class Location extends Application{
         result.ifPresent(new Consumer<String>() {
             @Override
             public void accept(String name) {
-                Vertex vertex = new Vertex(x, y, name);
-                //smaže starý uzel ze seznamu pokud je přepisován
-                graph.getVertexes().remove(circle.getVertex());
-                circle.setVertex(vertex);
-                graph.getVertexes().add(vertex);
+                if (circle.getVertex()==null){
+                    Vertex vertex = new Vertex(x, y, name);
+                    circle.setVertex(vertex);
+                    graph.getVertexes().add(vertex);
+                }
+                //pokud již užel existoval, změní jméno
+                else {
+                    circle.getVertex().setName(name);
+                }
             }
         });
     }

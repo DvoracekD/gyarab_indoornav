@@ -32,8 +32,8 @@ public class MapAdapter {
         return x*onePlanUnit+onePlanUnit/2f;
     }
 
-    public static int getPlanField(float x){
-        return (int)x/onePlanUnit;
+    public static int getPlanField(float coord){
+        return (int)coord/onePlanUnit;
     }
 
 }

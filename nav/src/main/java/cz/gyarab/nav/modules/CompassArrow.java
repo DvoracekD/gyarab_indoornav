@@ -4,6 +4,8 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.widget.ImageView;
 
+import cz.gyarab.nav.map.MapAdapter;
+
 /**
  * Reprezentuje postavu uživatel na mapě (střelku kompasu)
  * Pro její správnou funkci musí mít nastevený ImageView image
@@ -40,17 +42,19 @@ public class CompassArrow {
         image.setTranslationX(x - image.getLayoutParams().width/2f);
         image.setTranslationY(y - image.getLayoutParams().height/2f);
         setXY(x, y);
-        //RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(image.getLayoutParams());
-        //layoutParams.leftMargin = x - image.getLayoutParams().width/2;
-        //layoutParams.topMargin = y - image.getLayoutParams().height/2;
-        //image.setLayoutParams(layoutParams);
     }
 
     public void refreshPosition(){
         setPosition(x, y);
     }
 
-    public void move(int stepSize){
+    /**
+     * posune uživatele o danou velikost kroku v pixelech ve směru aktuálního azimutu (currentAzimuth)
+     * @param stepSize
+     * @return
+     */
+    public boolean move(int stepSize){
+
         //normalizace na orientovaný uhel, tak jak je v matematice
         final double normalAngle = Math.toRadians((90 + currentAzimuth)%360);
 
@@ -65,9 +69,17 @@ public class CompassArrow {
         animSetXY.setDuration(300);
         animSetXY.start();
 
+        //pokud se uživatel posunul do jiného čtverce, metoda vrátí true
+        boolean locChange = false;
+        if (MapAdapter.getPlanField(newX) == MapAdapter.getPlanField(getX())
+            && MapAdapter.getPlanField(newY) == MapAdapter.getPlanField(getY()))
+                locChange = true;
+
+        //nastaví nové souřadnice
         setXY(newX, newY);
-//        setPosition(x - (int)(stepSize * Math.cos(normalAngle)),
-//                y - (int)(stepSize * Math.sin(normalAngle)));
+
+        return locChange;
+
     }
 
     public void adjustArrow(float azimuth) {
@@ -76,16 +88,6 @@ public class CompassArrow {
         currentAzimuth = azimuth;
         rotationAnimator.setDuration(500);
         rotationAnimator.start();
-//        an = new RotateAnimation(-currentAzimuth, -azimuth,
-//                Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
-//                0.5f);
-//        currentAzimuth = azimuth;
-//
-//        an.setDuration(500);
-//        an.setRepeatCount(0);
-//        an.setFillAfter(true);
-//
-//        image.startAnimation(an);
 
     }
 

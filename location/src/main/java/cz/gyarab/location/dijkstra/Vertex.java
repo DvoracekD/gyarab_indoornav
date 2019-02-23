@@ -8,12 +8,16 @@ import java.io.Serializable;
 public class Vertex implements Serializable {
     final private int x;
     final private int y;
-    final private String name;
+    private String name;
 
 
     public Vertex(int x, int y, String name) {
         this.x = x;
         this.y = y;
+        this.name = name;
+    }
+
+    public void setName(String name) {
         this.name = name;
     }
 

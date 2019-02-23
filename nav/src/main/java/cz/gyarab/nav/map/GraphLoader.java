@@ -70,14 +70,22 @@ public class GraphLoader extends AsyncTask<String, Void, Graph> {
             }
             //subVertexes
             JSONObject jsonSubVertexes = jsonGraph.getJSONObject("subVertexes");
-            Iterator<String> iterator = jsonSubVertexes.keys();
-            while (iterator.hasNext()){
-                String key = iterator.next();
+            Iterator<String> subVertexIterator = jsonSubVertexes.keys();
+            while (subVertexIterator.hasNext()){
+                String key = subVertexIterator.next();
                 ArrayList<Vertex> adjVert = new ArrayList<>();
                 for (int i = 0; i < jsonSubVertexes.getJSONArray(key).length(); i++) {
                     adjVert.add(vertices[jsonSubVertexes.getJSONArray(key).getInt(i)]);
                 }
                 graph.getSubVertexes().put(key, adjVert);
+            }
+            //names
+            JSONObject jsonNames = jsonGraph.getJSONObject("names");
+            Iterator<String> namesIterator = jsonNames.keys();
+            while (namesIterator.hasNext()){
+                String key = namesIterator.next();
+                Vertex value = vertices[jsonNames.getInt(key)];
+                graph.getNames().put(key, value);
             }
 
         } catch (JSONException e) {

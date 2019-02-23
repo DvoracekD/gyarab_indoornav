@@ -22,8 +22,8 @@
         app:overScrollVertical="true"
         app:verticalPanEnabled="true"
         app:zoomEnabled="true"
-        tools:layout_editor_absoluteX="40dp"
-        tools:layout_editor_absoluteY="16dp">
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp">
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/map_layout"
@@ -55,12 +55,12 @@
         android:id="@+id/step"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
         android:contentDescription="@string/button"
         android:text="@string/step"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/search_layout" />
 
     <Button
         android:id="@+id/test_button"
@@ -94,5 +94,17 @@
         app:layout_constraintBottom_toTopOf="@+id/my_location_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_route_off" />
+
+    <cz.gyarab.nav.modules.SearchBar
+        android:id="@+id/search_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 
 </android.support.constraint.ConstraintLayout>

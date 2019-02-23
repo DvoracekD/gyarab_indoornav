@@ -13,6 +13,7 @@ public class Graph implements Serializable {
     private final List<Vertex> vertexes;
     private final List<Edge> edges;
     private final HashMap<String, ArrayList<Vertex>> subVertexes;
+    private HashMap<String, Vertex> names;
 
     public Graph(List<Vertex> vertexes, List<Edge> edges, HashMap<String, ArrayList<Vertex>> subVertexes) {
         this.vertexes = vertexes;
@@ -24,6 +25,7 @@ public class Graph implements Serializable {
         vertexes = new ArrayList<>();
         edges = new ArrayList<>();
         subVertexes = new HashMap<>();
+        names = new HashMap<>();
     }
 
     public Vertex getVertex(int x, int y){
@@ -57,5 +59,9 @@ public class Graph implements Serializable {
 
     public HashMap<String, ArrayList<Vertex>> getSubVertexes() {
         return subVertexes;
+    }
+
+    public HashMap<String, Vertex> getNames() {
+        return names;
     }
 }

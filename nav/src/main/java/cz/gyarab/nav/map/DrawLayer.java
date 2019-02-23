@@ -59,6 +59,7 @@ public class DrawLayer extends AppCompatImageView {
         if (points != null && points.length != 0){
             canvas.drawLines(points, viewModel.getLinePaint());
             //kolečka spojující jednotlivé linky polyline
+            if (viewModel.getPath() == null) return;
             for (Vertex v : viewModel.getPath()){
                 canvas.drawCircle(MapAdapter.getMapCoordinate(v.getX()), MapAdapter.getMapCoordinate(v.getY()), STROKE_SIZE/2f, viewModel.getCirclePaint());
             }
