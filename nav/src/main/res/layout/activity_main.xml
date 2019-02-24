@@ -15,7 +15,7 @@
         app:horizontalPanEnabled="true"
         app:maxZoom="5"
         app:maxZoomType="zoom"
-        app:minZoom="0.8"
+        app:minZoom="1"
         app:minZoomType="zoom"
         app:overPinchable="true"
         app:overScrollHorizontal="true"
@@ -26,28 +26,41 @@
         tools:layout_editor_absoluteY="0dp">
 
         <android.support.constraint.ConstraintLayout
-            android:id="@+id/map_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <cz.gyarab.nav.map.DrawLayer
-                android:id="@+id/map"
-                android:layout_width="4192dp"
-                android:layout_height="2940dp"
-                android:contentDescription="@string/image"
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/map_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="300dp"
+                android:layout_marginTop="300dp"
+                android:layout_marginEnd="300dp"
+                android:layout_marginBottom="300dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/plan_np1" />
+                app:layout_constraintTop_toTopOf="parent">
 
-            <ImageView
-                android:id="@+id/compass_arrow"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/image"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_arrow" />
+                <cz.gyarab.nav.map.DrawLayer
+                    android:id="@+id/map"
+                    android:layout_width="4192dp"
+                    android:layout_height="2940dp"
+                    android:contentDescription="@string/image"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/plan_np1" />
 
+                <ImageView
+                    android:id="@+id/compass_arrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/image"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_arrow" />
+
+            </android.support.constraint.ConstraintLayout>
         </android.support.constraint.ConstraintLayout>
     </com.otaliastudios.zoom.ZoomLayout>
 

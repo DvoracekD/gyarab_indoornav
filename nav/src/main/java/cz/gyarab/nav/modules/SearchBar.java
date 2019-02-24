@@ -1,5 +1,7 @@
 package cz.gyarab.nav.modules;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
@@ -8,10 +10,13 @@ import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import cz.gyarab.nav.R;
@@ -77,7 +82,6 @@ public class SearchBar extends ConstraintLayout {
         findViewById(R.id.magni_button).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 textView.requestFocus();
                 //otevřít klávesnici
                 InputMethodManager inputMethodManager =
