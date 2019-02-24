@@ -94,6 +94,8 @@ public class DrawLayerViewModel extends AndroidViewModel {
     }
 
     public void updateFinish(Vertex finish){
+        this.finish = finish;
+
         if (start == null){
 
             start = mainViewModel.getDijkstra().getGraph().getVertex(
@@ -103,10 +105,12 @@ public class DrawLayerViewModel extends AndroidViewModel {
         executeDijkstra(start, finish);
     }
 
-    public void updateRoute(Vertex source){
+    public void updateRoute(Vertex start){
+        this.start = start;
 
-        if (finish != null)
-            executeDijkstra(source, finish);
+        if (finish != null){
+            executeDijkstra(start, finish);
+        }
 
     }
 

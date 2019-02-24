@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
         //tlačítko pro smazání trasy
         final DrawLayer drawLayer = findViewById(R.id.map);
         routeOffButton = findViewById(R.id.route_off_button);
-        if (viewModel.routeOffButtonHidden)hideRouteOffButton();
+        hideRouteOffButton();
         routeOffButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -163,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onOptionSelected(String option) {
                 drawLayerViewModel.updateFinish(viewModel.getDijkstra().getGraph().getNames().get(option));
+                textView.clearFocus();
             }
         });
 
