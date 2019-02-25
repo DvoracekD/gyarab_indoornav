@@ -26,4 +26,12 @@ public class SignalEntry implements Serializable{
     public int getSignal() {
         return WifiManager.calculateSignalLevel(signal, 100);
     }
+
+    public static int getSignal(int signal){
+        return WifiManager.calculateSignalLevel(signal, 100);
+    }
+
+    public int getRawSignal(){
+        return signal;
+    }
 }

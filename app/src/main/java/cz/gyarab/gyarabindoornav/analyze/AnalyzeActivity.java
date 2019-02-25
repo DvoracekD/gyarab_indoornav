@@ -31,12 +31,16 @@ import org.json.JSONObject;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import cz.gyarab.gyarabindoornav.R;
 import cz.gyarab.gyarabindoornav.buildingScanner.Entry;
@@ -47,6 +51,7 @@ public class AnalyzeActivity extends AppCompatActivity {
 
     private final int PLAN_WIDTH = 36;
     private final int PLAN_HEIGHT = 25;
+    private  final String SSID = "GYM_ARABSKA";
     private MyRoundButton buttons[][] = new MyRoundButton[PLAN_WIDTH][PLAN_HEIGHT];
     private MyRoundButton activePosition;
     private Entry entries[][] = new Entry[PLAN_WIDTH][PLAN_HEIGHT];
@@ -112,8 +117,8 @@ public class AnalyzeActivity extends AppCompatActivity {
             wifiManager.setWifiEnabled(true);
         }
 
-        try (FileInputStream fis = new FileInputStream(getFileStreamPath("out.tmp"))) {
-            ObjectInputStream ois = new ObjectInputStream(fis);
+        /*try (InputStream is = getAssets().open("out.tmp")) {
+            ObjectInputStream ois = new ObjectInputStream(is);
             entries = (Entry[][]) ois.readObject();
             if (entries == null)entries = new Entry[PLAN_WIDTH][PLAN_HEIGHT];
             Toast.makeText(getApplicationContext(), "Loaded", Toast.LENGTH_SHORT).show();
@@ -121,7 +126,8 @@ public class AnalyzeActivity extends AppCompatActivity {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        }
+        }*/
+        loadJSON("data.json");
 
         planCanvas = findViewById(R.id.plan_canvas);
         planCanvas.setRowCount(PLAN_HEIGHT);
@@ -145,14 +151,16 @@ public class AnalyzeActivity extends AppCompatActivity {
         //zjištění počtu používaných AP
         int usableSignals = 0;
         for (ScanResult result : results)
-            if (result.SSID.contains("GYM_ARABSKA"))
+            if (result.SSID.contains(SSID))
                 usableSignals++;
 
         for (int i = 0; i < PLAN_HEIGHT; i++){
             for (int j = 0; j < PLAN_WIDTH; j++) {
 
-                buttons[j][i] = new MyRoundButton(this, j, i);
-                planCanvas.addView(buttons[j][i]);
+                if (buttons[j][i] == null){
+                    buttons[j][i] = new MyRoundButton(this, j, i);
+                    planCanvas.addView(buttons[j][i]);
+                }
                 int difference = getDifference(j, i, usableSignals);
                 if (difference == 255)continue;
                 float green = (1-(Math.abs(difference)/255f));
@@ -183,21 +191,21 @@ public class AnalyzeActivity extends AppCompatActivity {
     private int getDifference(int x, int y, int usableSignals){
         if (entries[x][y] == null)return 255;
         //pokud vidí víc AP nebo nějaké nevidí, získá 20 trestných bodů
-        final int PENALTY = 50;
+        //final int PENALTY = 50;
+        //na začátku je zkopírováno pole s výsledky scanu, aby se s ním mohlo pracovat
+        ArrayList<ScanResult> scanResults = new ArrayList<>(results);
         int difference = 0;
-        int used = 0;
         for (SignalEntry entry : entries[x][y].list){
-            if (entry.getSSID().contains("GYM_ARABSKA")) {
+            if (entry.getSSID().contains(SSID)) {
                 //silá naskenovaného signálu
-                int scanSignal = getAPSig(entry.getSSID(), entry.getBSSID());
-                //pokud bod vidí signál navíc
-                //if (scanSignal == 0)
-                //    difference += PENALTY;
-                //přičte známku za jeden společný AP
-                //else
-                    difference += Math.abs(scanSignal - entry.getSignal());
-                used++;
+                int scanSignal = getAPSig(entry.getSSID(), entry.getBSSID(), scanResults);
+                difference += Math.abs(scanSignal - entry.getRawSignal());//raw signal protoze v jsonu je ulozen v procentech
             }
+        }
+        //V seznamu naskenovaných wifi zbyly ty, které jsou navíc. Budou přičteny k rozdílu
+        for (ScanResult result : scanResults){
+            if (result.SSID.contains(SSID))
+                difference += SignalEntry.getSignal(result.level);
         }
         //pro ty AP, ktere byly naskenovany ale v referencnim bodu chybí
         if (entries[x][y].list.size() != 0){
@@ -207,16 +215,18 @@ public class AnalyzeActivity extends AppCompatActivity {
     }
 
     /**
-     *
+     * Zjťuje, zdali je dotazovaná wifi v seznamu naskenovaných wifi. Pokud ano, ze seznamu ji smaže
      * @param ssid
      * @param bssid
-     * @return rozdíl v síle signálu (-1 pokud vůbec signál nezná)
+     * @return rozdíl v síle signálu v procentech(0 pokud vůbec signál nezná)
      */
-    public int getAPSig(String ssid, String bssid){
-        for (ScanResult signalEntry : results)
-            if (signalEntry.SSID.contentEquals(ssid) && signalEntry.BSSID.contentEquals(bssid))
-                return signalEntry.level;
-        //pokud neopsahuje dotazované AP
+    public int getAPSig(String ssid, String bssid, ArrayList<ScanResult> scanResults){
+        for (ScanResult signalEntry : scanResults)
+            if (signalEntry.SSID.contentEquals(ssid) && signalEntry.BSSID.contentEquals(bssid)){
+                scanResults.remove(signalEntry);
+                return SignalEntry.getSignal(signalEntry.level);
+            }
+        //pokud neobsahuje dotazované AP
         return 0;
     }
 
@@ -249,6 +259,39 @@ public class AnalyzeActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+    }
+
+    private void loadJSON(String name){
+        //nahrání json souboru
+        String json = "";
+        try (InputStream is = getAssets().open(name)) {
+            json = new Scanner(is).useDelimiter("\\A").next();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            JSONArray xJsonArray = new JSONArray(json);
+            entries = new Entry[xJsonArray.length()][xJsonArray.getJSONArray(0).length()];
+
+            for (int i = 0; i < xJsonArray.length(); i++) {
+                JSONArray yJsonArray = xJsonArray.getJSONArray(i);
+                for (int j = 0; j < yJsonArray.length(); j++) {
+                    JSONArray jsonEntry = yJsonArray.getJSONArray(j);
+                    ArrayList<SignalEntry> signalEntries = new ArrayList<>();
+                    for (int k = 0; k < jsonEntry.length(); k++) {
+                        JSONObject jsonSignalEntry =  jsonEntry.getJSONObject(k);
+                        signalEntries.add(new SignalEntry(
+                                jsonSignalEntry.getString("SSID"),
+                                jsonSignalEntry.getString("BSSID"),
+                                jsonSignalEntry.getInt("signal")));
+                    }
+                    if (jsonEntry.length()!= 0)entries[i][j] = new Entry(signalEntries);
+                }
+            }
+
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
     }
 
     private void saveScan(){
