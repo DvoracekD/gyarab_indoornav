@@ -8,7 +8,6 @@ public class MyRoundButton extends android.support.v7.widget.AppCompatRadioButto
 
     public int x;
     public int y;
-    private int diff;
 
     public MyRoundButton(Context context) {
         super(context);
@@ -22,11 +21,4 @@ public class MyRoundButton extends android.support.v7.widget.AppCompatRadioButto
 
     }
 
-    public int getDiff() {
-        return diff;
-    }
-
-    public void setDiff(int diff) {
-        this.diff = diff;
-    }
 }

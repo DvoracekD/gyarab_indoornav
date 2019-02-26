@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".buildingScanner.PlanScannerActivity"></activity>
-        <activity android:name=".analyze.AnalyzeActivity"></activity>
+        <activity android:name=".analysis.AnalysisActivity"></activity>
     </application>
 
 </manifest>

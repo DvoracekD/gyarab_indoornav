@@ -1,42 +1,28 @@
-package cz.gyarab.gyarabindoornav.analyze;
+package cz.gyarab.gyarabindoornav.analysis;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
-import android.os.Build;
-import android.support.annotation.RequiresApi;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayout;
-import android.util.JsonWriter;
-import android.util.Log;
-import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,13 +33,12 @@ import cz.gyarab.gyarabindoornav.buildingScanner.Entry;
 import cz.gyarab.gyarabindoornav.buildingScanner.MyRoundButton;
 import cz.gyarab.gyarabindoornav.buildingScanner.SignalEntry;
 
-public class AnalyzeActivity extends AppCompatActivity {
+public class AnalysisActivity extends AppCompatActivity {
 
     private final int PLAN_WIDTH = 36;
     private final int PLAN_HEIGHT = 25;
     private  final String SSID = "GYM_ARABSKA";
     private MyRoundButton buttons[][] = new MyRoundButton[PLAN_WIDTH][PLAN_HEIGHT];
-    private MyRoundButton activePosition;
     private Entry entries[][] = new Entry[PLAN_WIDTH][PLAN_HEIGHT];
     private List<ScanResult> results;
     private WifiManager wifiManager;
@@ -88,19 +73,6 @@ public class AnalyzeActivity extends AppCompatActivity {
         results = wifiManager.getScanResults();
         context.unregisterReceiver(this);
 
-//        entries[activePosition.x][activePosition.y] = null;
-//        activePosition.setBackgroundColor(Color.GREEN);
-//
-//        for (ScanResult scanResult : results) {
-//
-//            if (/*scanResult.SSID.equals("GYM_ARABSKA")*/ true){
-//                if (entries[activePosition.x][activePosition.y] == null)
-//                    entries[activePosition.x][activePosition.y] = new Entry(new SignalEntry(scanResult.SSID, scanResult.BSSID, scanResult.level));
-//                else
-//                    entries[activePosition.x][activePosition.y].list.add(new SignalEntry(scanResult.SSID, scanResult.BSSID, scanResult.level));
-//            }
-//            //adapter.notifyDataSetChanged();
-//        }
         Toast.makeText(context, "Done", Toast.LENGTH_SHORT).show();
         setRects();
         }
@@ -117,43 +89,15 @@ public class AnalyzeActivity extends AppCompatActivity {
             wifiManager.setWifiEnabled(true);
         }
 
-        /*try (InputStream is = getAssets().open("out.tmp")) {
-            ObjectInputStream ois = new ObjectInputStream(is);
-            entries = (Entry[][]) ois.readObject();
-            if (entries == null)entries = new Entry[PLAN_WIDTH][PLAN_HEIGHT];
-            Toast.makeText(getApplicationContext(), "Loaded", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }*/
         loadJSON("data.json");
 
         planCanvas = findViewById(R.id.plan_canvas);
         planCanvas.setRowCount(PLAN_HEIGHT);
         planCanvas.setColumnCount(PLAN_WIDTH);
 
-//        for (int i = 0; i < PLAN_HEIGHT; i++){
-//            for (int j = 0; j < PLAN_WIDTH; j++) {
-//                if (entries[j][i] != null){
-//                    int difference = 0;
-//                    for (SignalEntry signalEntry : entries[j][i].list){
-//                        if (signalEntry.getSSID().contentEquals("GYM_ARABSKA"))
-//                            difference += (Test.getAPSig(signalEntry.getSSID(), signalEntry.getBSSID()));
-//                    }
-//                    buttons[j][i].setDiff(difference);
-//                }
-//            }
-//        }
     }
 
     private void setRects(){
-        //zjištění počtu používaných AP
-        int usableSignals = 0;
-        for (ScanResult result : results)
-            if (result.SSID.contains(SSID))
-                usableSignals++;
-
         for (int i = 0; i < PLAN_HEIGHT; i++){
             for (int j = 0; j < PLAN_WIDTH; j++) {
 
@@ -161,34 +105,22 @@ public class AnalyzeActivity extends AppCompatActivity {
                     buttons[j][i] = new MyRoundButton(this, j, i);
                     planCanvas.addView(buttons[j][i]);
                 }
-                int difference = getDifference(j, i, usableSignals);
+                int difference = getDifference(j, i);
                 if (difference == 255)continue;
                 float green = (1-(Math.abs(difference)/255f));
                 if (difference > 255) green = 0;
                 buttons[j][i].setBackgroundColor(Color.argb( 0.5f, 0f , green > 1 ? 1 : green, 0f ));
-
-//                if (entries[j][i]!=null)buttons[j][i].setBackgroundColor(Color.argb(127, 0, 255, 0));
-//                buttons[j][i].setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//                    @Override
-//                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                        if (isChecked){
-//                            activePosition = (MyRoundButton) buttonView;
-//                            Toast.makeText(getApplicationContext(), "[" + activePosition.x +", "+activePosition.y+"]", Toast.LENGTH_SHORT).show();
-//                            for (int k = 0; k < PLAN_WIDTH; k++) {
-//                                for (int l = 0; l < PLAN_HEIGHT; l++) {
-//                                    buttons[k][l].setChecked(false);
-//                                }
-//                            }
-//                            Log.d("entry", StringExtractor.getStringContent(activePosition, entries[activePosition.x][activePosition.y]));
-//                            buttonView.setChecked(true);
-//                        }
-//                    }
-//                });
             }
         }
     }
 
-    private int getDifference(int x, int y, int usableSignals){
+    /**
+     * Vypočítá o kolik se v součtu liší naskenované hodnoty od těch referenčních
+     * @param x souřadnice aktuální pozice
+     * @param y souřadnice aktuální pozice
+     * @return celkový rozdíl od referenčních hodnot
+     */
+    private int getDifference(int x, int y){
         if (entries[x][y] == null)return 255;
         //pokud vidí víc AP nebo nějaké nevidí, získá 20 trestných bodů
         //final int PENALTY = 50;
@@ -207,10 +139,7 @@ public class AnalyzeActivity extends AppCompatActivity {
             if (result.SSID.contains(SSID))
                 difference += SignalEntry.getSignal(result.level);
         }
-        //pro ty AP, ktere byly naskenovany ale v referencnim bodu chybí
-        if (entries[x][y].list.size() != 0){
-            //difference += (Math.abs(usableSignals - used)*PENALTY);
-        }
+
         return difference;
     }
 
@@ -230,6 +159,10 @@ public class AnalyzeActivity extends AppCompatActivity {
         return 0;
     }
 
+    /**
+     * Ukládá do Jsonu referenční tabulku hodnot
+     * @throws JSONException
+     */
     public void saveJson() throws JSONException {
         JSONArray xJsonArray = new JSONArray();
         for (int i=0; i<PLAN_WIDTH; i++){
@@ -261,6 +194,10 @@ public class AnalyzeActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * načítá Json tabulku referenčních hodnot
+     * @param name
+     */
     private void loadJSON(String name){
         //nahrání json souboru
         String json = "";
@@ -294,6 +231,9 @@ public class AnalyzeActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * ukládá jeden scan jako objekt do souboru
+     */
     private void saveScan(){
         new Thread(new Runnable() {
             @Override

@@ -14,7 +14,7 @@ import android.widget.CompoundButton;
 import android.widget.ListView;
 
 import cz.gyarab.gyarabindoornav.R;
-import cz.gyarab.gyarabindoornav.analyze.AnalyzeActivity;
+import cz.gyarab.gyarabindoornav.analysis.AnalysisActivity;
 import cz.gyarab.gyarabindoornav.buildingScanner.PlanScannerActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         analyzeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(getApplicationContext(), AnalyzeActivity.class));
+                startActivity(new Intent(getApplicationContext(), AnalysisActivity.class));
             }
         });
 

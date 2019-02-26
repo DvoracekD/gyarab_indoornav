@@ -308,7 +308,7 @@ public class Location extends Application{
                     //System.out.println("-fx-background-color: rgba( 0 , "+(255-(difference/255f *255f)) +", 0 , 0.5 ) ");
                     planes[j][i].setStyle("-fx-background-color: rgba( 0 , "+(255-(difference/255f *255f))+", 0 , 0.5 ) ");
                 }
-                node.getChildren().add(new Text(difference+""));
+                //node.getChildren().add(new Text(difference+""));
                 StackPane.setAlignment(node, Pos.CENTER);
 
                 gridPane.add(node, j, i);
@@ -561,12 +561,13 @@ public class Location extends Application{
             for (int j = 0; j < PLAN_WIDTH; j++) {
                 int difference = getDifference(j, i);
                 if (entries[j][i].list.size() != 0){
-
+                    if (difference > 255)planes[j][i].setStyle("-fx-background-color: rgba( 0 , 0, 0 , 0.1 ) ");
                     //System.out.println("-fx-background-color: rgba( 0 , "+(255-(difference/255f *255f)) +", 0 , 0.5 ) ");
+                    else
                     planes[j][i].setStyle("-fx-background-color: rgba( 0 , "+(255-(difference/255f *255f))+", 0 , 0.5 ) ");
                 }
-                planes[j][i].getChildren().remove(0);
-                planes[j][i].getChildren().add(new Text(difference+""));
+                //planes[j][i].getChildren().remove(0);
+                //planes[j][i].getChildren().add(new Text(difference+""));
             }
         }
     }

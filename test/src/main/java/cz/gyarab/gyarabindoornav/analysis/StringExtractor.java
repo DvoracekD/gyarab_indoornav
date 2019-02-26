@@ -1,18 +1,19 @@
-package cz.gyarab.gyarabindoornav.analyze;
+package cz.gyarab.gyarabindoornav.analysis;
 
-import android.os.Build;
-import android.support.annotation.RequiresApi;
-
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
 import cz.gyarab.gyarabindoornav.buildingScanner.Entry;
 import cz.gyarab.gyarabindoornav.buildingScanner.MyRoundButton;
-import cz.gyarab.gyarabindoornav.buildingScanner.Position;
 import cz.gyarab.gyarabindoornav.buildingScanner.SignalEntry;
 
 public class StringExtractor {
+
+    /**
+     * Vrátí informace o daném bodě
+     * @param activePosition daný čtverec
+     * @param entry naskenované hodnoty
+     * @return
+     */
     public static String getStringContent(MyRoundButton activePosition, Entry entry){
         if (activePosition == null || entry == null)return "";
         entry.list.sort(new Comparator<SignalEntry>() {
@@ -26,7 +27,6 @@ public class StringExtractor {
         for (SignalEntry signalEntry: entry.list) {
             result += signalEntry.getSSID() + ", " + signalEntry.getBSSID() + ", " + signalEntry.getSignal()+"\n";
         }
-        result += "difference"+activePosition.getDiff() + "%\n";
         return result;
     }
 }

@@ -4,6 +4,9 @@ import android.net.wifi.WifiManager;
 
 import java.io.Serializable;
 
+/**
+ * Výsledek skenu pro jednu síť
+ */
 public class SignalEntry implements Serializable{
     private String SSID;
     private String BSSID;

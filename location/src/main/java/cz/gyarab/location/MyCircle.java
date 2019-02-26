@@ -5,6 +5,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 
+/**
+ * Custom circle dolplněný o referenci na vrchol grafu a dvě poslední barvy pro jejich resetování
+ */
 public class MyCircle extends Circle {
 
     private Vertex vertex;

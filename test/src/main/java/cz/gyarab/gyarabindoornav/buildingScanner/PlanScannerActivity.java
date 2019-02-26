@@ -43,9 +43,6 @@ public class PlanScannerActivity extends AppCompatActivity {
             case R.id.scan_menu_item:
                 scanWifi(this);
                 return true;
-            case R.id.content_menu_item:
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -56,7 +53,6 @@ public class PlanScannerActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.main, menu);
         return super.onCreateOptionsMenu(menu);
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +65,7 @@ public class PlanScannerActivity extends AppCompatActivity {
             wifiManager.setWifiEnabled(true);
         }
 
+        //načte poslední stav skenování
         try (FileInputStream fis = new FileInputStream(getFileStreamPath("out.tmp"))) {
             ObjectInputStream ois = new ObjectInputStream(fis);
             entries = (Entry[][]) ois.readObject();
@@ -90,6 +87,7 @@ public class PlanScannerActivity extends AppCompatActivity {
             }
         });
 
+        //Nastaví tlačítkům listener po kliknutí
         for (int i = 0; i < PLAN_HEIGHT; i++){
             for (int j = 0; j < PLAN_WIDTH; j++) {
                 buttons[j][i] = new MyRoundButton(this, j, i);
@@ -115,12 +113,17 @@ public class PlanScannerActivity extends AppCompatActivity {
     }
 
 
+    //provede sken wifi
+    //Vysledek spustí BreadcastReciever
     public void scanWifi(Context context) {
         context.registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         wifiManager.startScan();
         Toast.makeText(context, "Scanning WiFi ...", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * spustí se po dokončení skenu
+     */
     private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -130,21 +133,22 @@ public class PlanScannerActivity extends AppCompatActivity {
             entries[activePosition.x][activePosition.y] = null;
             activePosition.setBackgroundColor(Color.GREEN);
 
+            //přidá výsledky výsledky skenu do matice výsledků
             for (ScanResult scanResult : results) {
 
-                if (/*scanResult.SSID.equals("GYM_ARABSKA")*/ true){
-                    if (entries[activePosition.x][activePosition.y] == null)
-                        entries[activePosition.x][activePosition.y] = new Entry(new SignalEntry(scanResult.SSID, scanResult.BSSID, scanResult.level));
-                    else
-                        entries[activePosition.x][activePosition.y].list.add(new SignalEntry(scanResult.SSID, scanResult.BSSID, scanResult.level));
-                }
-                //adapter.notifyDataSetChanged();
+                if (entries[activePosition.x][activePosition.y] == null)
+                    entries[activePosition.x][activePosition.y] = new Entry(new SignalEntry(scanResult.SSID, scanResult.BSSID, scanResult.level));
+                else
+                    entries[activePosition.x][activePosition.y].list.add(new SignalEntry(scanResult.SSID, scanResult.BSSID, scanResult.level));
             }
             Toast.makeText(context, "Done", Toast.LENGTH_SHORT).show();
             saveState();
         };
     };
 
+    /**
+     * ukládá aktuální podobu referenční sítě pomoci ObjectOutputStream do interního uložiště aplikace
+     */
     private void saveState(){
         new Thread(new Runnable() {
             @Override

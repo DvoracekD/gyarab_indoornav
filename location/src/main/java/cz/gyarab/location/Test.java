@@ -52,7 +52,7 @@ public class Test {
      *
      * @param ssid
      * @param bssid
-     * @return rozdíl v síle signálu (-1 pokud vůbec signál nezná)
+     * @return rozdíl v síle signálu (0 pokud vůbec signál nezná)
      */
     public static int getAPSig(String ssid, String bssid){
         for (SignalEntry signalEntry : testEntry.list)

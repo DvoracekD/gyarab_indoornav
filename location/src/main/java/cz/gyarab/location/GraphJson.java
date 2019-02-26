@@ -18,10 +18,17 @@ import cz.gyarab.location.dijkstra.Edge;
 import cz.gyarab.location.dijkstra.Graph;
 import cz.gyarab.location.dijkstra.Vertex;
 
+/**
+ * Třída se statickými metodami pro převod Grafu plánu do formátu json a zpět
+ */
 public class GraphJson {
 
     private static final String FILE_NAME = "map_graph.json";
 
+    /**
+     * Uloží graf do .json soubor
+     * @param graph graf který má být uložen
+     */
     public static void saveJson(Graph graph){
 
         //objekt grafu
@@ -122,6 +129,10 @@ public class GraphJson {
         }
     }
 
+    /**
+     * Načte graf ze souboru .json
+     * @return načtený graf
+     */
     public static Graph readJson(){
         Graph graph = new Graph();
         //nahrání json souboru
