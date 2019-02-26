@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Třída typu singleton sloužící ke testování s předefinovaným seznamem wifi zařízení
+ */
 public class APScanner {
 
     private static String aps = "FC:15:B4:BC:AB:29\t028/ředitelna; 1B.1.80\t" +

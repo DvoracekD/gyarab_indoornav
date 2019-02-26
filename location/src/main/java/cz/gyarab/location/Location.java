@@ -3,36 +3,31 @@ package cz.gyarab.location;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.awt.Paint;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
+import cz.gyarab.location.customViews.MyCircle;
+import cz.gyarab.location.customViews.MyPane;
 import cz.gyarab.location.dijkstra.DijkstraAlgorithm;
 import cz.gyarab.location.dijkstra.Edge;
 import cz.gyarab.location.dijkstra.Graph;
 import cz.gyarab.location.dijkstra.MyLine;
 import cz.gyarab.location.dijkstra.Vertex;
+import cz.gyarab.location.signal.Entry;
+import cz.gyarab.location.signal.SignalEntry;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.event.EventType;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -41,7 +36,6 @@ import javafx.geometry.VPos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
@@ -51,8 +45,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -60,9 +52,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.LineTo;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -92,10 +81,12 @@ public class Location extends Application{
     public static void main(String[] args) {
         readJson();
         launch(args);
-        //readObject();
     }
 
-    public static void readJson(){
+    /**
+     * Načtení json souboru do pole oběktů @Entry
+     */
+    private static void readJson(){
         String input = "";
         try {
             Scanner scanner = new Scanner(new File("location/resources/data.json"));
@@ -117,31 +108,6 @@ public class Location extends Application{
                 entries[i][j] = new Entry(signalEntries);
             }
         }
-//        for (Object yArrays : xArrays) {
-//            JSONArray YArray = (JSONArray)yArrays;
-//            for (Object entries : YArray){
-//                JSONArray Entries = (JSONArray)entries;
-//                for (Object entry : Entries){
-//                    JSONObject Entry = (JSONObject)entry;
-//                    
-//                }
-//            }
-//        };
-    }
-
-    public static void readObject(){
-
-        try (FileInputStream fis = new FileInputStream("out.tmp")) {
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            entries = (Entry[][]) ois.readObject();
-            if (entries == null)entries = new Entry[PLAN_WIDTH][PLAN_HEIGHT];
-            System.out.println("Loaded");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
     }
 
     @Override
@@ -163,6 +129,8 @@ public class Location extends Application{
                 }
             }
         });
+
+        //Inicializace tlačítek v horní liště
         final Button addPointButton = new Button("Add Point");
         addPointButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
@@ -181,7 +149,7 @@ public class Location extends Application{
             }
         });
 
-        final Button addSubVertexes = new Button("Add SubVertexes");
+        final Button addSubVertexes = new Button("Add SubVertices");
         addSubVertexes.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -196,7 +164,6 @@ public class Location extends Application{
             public void handle(MouseEvent event) {
                 setNewActiveButton(findWayButton);
                 mode = Mode.FIND_WAY;
-                //findWay(graph.getVertexes().get(graph.getVertexes().size()-1),graph.getVertexes().get(0));
             }
         });
 
@@ -222,7 +189,6 @@ public class Location extends Application{
         saveButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                saveObj(graph, "map_graph");
                 GraphJson.saveJson(graph);
             }
         });
@@ -235,7 +201,8 @@ public class Location extends Application{
         toolBar.getItems().add(findWayButton);
         toolBar.getItems().add(setNamesButton);
         toolBar.getItems().add(saveButton);
-        //mezere pro zarovnání v toolbaru
+
+        //mezere pro zarovnání mezi tlačítky a nabídkou režimů v toolbaru
         Region spring = new Region();
         HBox.setHgrow(spring, Priority.ALWAYS);
         toolBar.getItems().add(spring);
@@ -247,21 +214,18 @@ public class Location extends Application{
         imageView.setPreserveRatio(true);
         imageView.setFitWidth(FRAME_WIDTH);
 
+        //Nastavení stylů
         stackPane = new AnchorPane(imageView);
 
         radios = new MyCircle[PLAN_WIDTH][PLAN_HEIGHT];
         planes = new MyPane[PLAN_WIDTH][PLAN_HEIGHT];
         gridPane = new GridPane();
-
-        //!!!
-        //! setAlgorithmWorkspace();
-
         stackPane.getChildren().add(gridPane);
         gridPane.setAlignment(Pos.BOTTOM_LEFT);
         gridPane.setPadding(new Insets(0,0,5,10));
         ScrollPane scrollPane = new ScrollPane(stackPane);
         root.getChildren().add(scrollPane);
-        //planes[23][16].setStyle("-fx-background-color: rgba( 0 , 255, 0 , 0.5 ) ");
+
 
         primaryStage.setTitle("MapEditor");
         primaryStage.setScene(new Scene(root, FRAME_WIDTH+10, FRAME_HEIGHT+80));
@@ -270,6 +234,20 @@ public class Location extends Application{
         modeSelector.setValue("Graph generator");
     }
 
+    /**
+     * označí nové aktivní tlačítko, které se zbarvý zeleně
+     * @param newActiveButton
+     */
+    private void setNewActiveButton(Button newActiveButton){
+        if (activeButton != null)
+            activeButton.setStyle("");
+        newActiveButton.setStyle("-fx-background-color:lightgreen");
+        activeButton = newActiveButton;
+    }
+
+    /**
+     * Nastavení režimu algoritmus - vizualizace pracovní verze algortmu hledání polohy
+     */
     private void setAlgorithmWorkspace(){
         gridPane.getChildren().clear();
         gridPane.setGridLinesVisible(true);
@@ -304,11 +282,9 @@ public class Location extends Application{
 
                 int difference = getDifference(j, i);
                 if (entries[j][i].list.size() != 0){
-
-                    //System.out.println("-fx-background-color: rgba( 0 , "+(255-(difference/255f *255f)) +", 0 , 0.5 ) ");
                     planes[j][i].setStyle("-fx-background-color: rgba( 0 , "+(255-(difference/255f *255f))+", 0 , 0.5 ) ");
                 }
-                //node.getChildren().add(new Text(difference+""));
+                node.getChildren().add(new Text(difference+""));
                 StackPane.setAlignment(node, Pos.CENTER);
 
                 gridPane.add(node, j, i);
@@ -316,19 +292,14 @@ public class Location extends Application{
         }
     }
 
-    private void setNewActiveButton(Button newActiveButton){
-        if (activeButton != null)
-            activeButton.setStyle("");
-        newActiveButton.setStyle("-fx-background-color:lightgreen");
-        activeButton = newActiveButton;
-    }
-
     private MyCircle constraintCircle;
     private Graph graph;
 
+    /**
+     * nastavení režimu Graf - vytvážení grafu mapy
+     */
     private void setGraphWorkspace() {
 
-        //readGraph("map_graph");
         graph = GraphJson.readJson();
         if (graph == null)
             graph = new Graph();
@@ -423,7 +394,7 @@ public class Location extends Application{
                                         if (vertexOfCurrentCircle != null && vertexOfCurrentCircle.equals(currentVertex)){
                                             revertColoredCircles();
                                         }
-                                        //pokud se jedna o podrazeny vrchol
+                                        //pokud se jedna o podřazeny vrchol
                                         else if(currentAdjVer != null){
                                             currentAdjVer.remove(currentVertex);
                                             circle.setColor(Color.TRANSPARENT);
@@ -464,7 +435,7 @@ public class Location extends Application{
                 });
             }
         }
-        //updateGraph();
+        updateGraph();
     }
 
     //první vrchol cesty
@@ -474,6 +445,9 @@ public class Location extends Application{
     ArrayList<MyCircle> coloredCircles = new ArrayList<>();
     Vertex currentVertex;
 
+    /**
+     * Vrátí barvy obarveným vrcholům
+     */
     private void revertColoredCircles(){
         coloredCircles.get(0).setColor(Color.RED);
         currentVertex = null;
@@ -483,11 +457,20 @@ public class Location extends Application{
         coloredCircles = new ArrayList<>();
     }
 
+    /**
+     * Vrátí barvy obarveným vrcholům
+     */
     private void revertColors(){
         for (MyCircle c : coloredCircles)c.setPreviousColor();
         coloredCircles = new ArrayList<>();
     }
 
+    /**
+     * Zobrazí klikatelnou hranu mezi dvěma vrcholy
+     * @param circle první vrchol
+     * @param constraintCircle druhý vrchol
+     * @param edge Interní reprezentace hrany pro Dijkstrův algoritmus
+     */
     private void addEdge(MyCircle circle, MyCircle constraintCircle, Edge edge){
         Bounds circleBounds = circle.localToParent(circle.getBoundsInLocal());
         Bounds constraintCircleBounds = constraintCircle.localToParent(constraintCircle.getBoundsInLocal());
@@ -496,7 +479,6 @@ public class Location extends Application{
                 (circleBounds.getMaxY()+circleBounds.getMinY())/2,
                 (constraintCircleBounds.getMaxX()+constraintCircleBounds.getMinX())/2,
                 (constraintCircleBounds.getMaxY()+constraintCircleBounds.getMinY())/2);
-        //line.getStrokeDashArray().addAll(25d, 10d);
         line.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -510,6 +492,9 @@ public class Location extends Application{
         line.setEdge(edge);
     }
 
+    /**
+     * zobrazí všechny vrcholy a hrany v paměti na plánu
+     */
     private void updateGraph(){
         for (Vertex v : graph.getVertexes()){
             radios[v.getX()][v.getY()].setVertex(v);
@@ -521,14 +506,20 @@ public class Location extends Application{
 
     /**
      * spočítá skutečnou vzdálenost mezi dvěma uzly
-     * @param node1
-     * @param node2
-     * @return
+     * @param node1 vrchol 1
+     * @param node2 vrchol 2
+     * @return vzdálenost mezi vrcholy
      */
     private double computeDistance(Vertex node1, Vertex node2){
         return Math.sqrt(Math.pow(node1.getX()-node2.getX(), 2) + Math.pow(node1.getY()-node2.getY(), 2))*DISTANCE_BETWEEN_POINTS;
     }
 
+    /**
+     * Zobrazí okno přidání nového vrchlu, respektive změna jména vrcholu
+     * @param circle tlačítko (čtverec), ke kterému má být vytvořen vrchol
+     * @param x souřadnice čtverce v jednotkách plánku (počet čtverců od levého horního rohu)
+     * @param y souřacnice čtverce v jednotkách plánku (počet čtverců od levého horního rohu)
+     */
     private void showDialog(final MyCircle circle, final int x, final int y){
         //pokud kroužek nemá přiřazený vrchol, defaultní hodnota jména bude ""
         String name = circle.getVertex() == null ? "" : circle.getVertex().getName();
@@ -548,7 +539,7 @@ public class Location extends Application{
                     circle.setVertex(vertex);
                     graph.getVertexes().add(vertex);
                 }
-                //pokud již užel existoval, změní jméno
+                //pokud již uzel existoval, změní jméno
                 else {
                     circle.getVertex().setName(name);
                 }
@@ -556,48 +547,30 @@ public class Location extends Application{
         });
     }
 
+    /**
+     * nastaví barvu čtverce dle rozdílu od referenčníh hodnot
+     */
     private void updatePlanes(){
         for (int i = 0; i < PLAN_HEIGHT; i++) {
             for (int j = 0; j < PLAN_WIDTH; j++) {
                 int difference = getDifference(j, i);
                 if (entries[j][i].list.size() != 0){
                     if (difference > 255)planes[j][i].setStyle("-fx-background-color: rgba( 0 , 0, 0 , 0.1 ) ");
-                    //System.out.println("-fx-background-color: rgba( 0 , "+(255-(difference/255f *255f)) +", 0 , 0.5 ) ");
                     else
                     planes[j][i].setStyle("-fx-background-color: rgba( 0 , "+(255-(difference/255f *255f))+", 0 , 0.5 ) ");
                 }
-                //planes[j][i].getChildren().remove(0);
-                //planes[j][i].getChildren().add(new Text(difference+""));
+                planes[j][i].getChildren().remove(0);
+                planes[j][i].getChildren().add(new Text(difference+""));
             }
         }
     }
 
-    public void readGraph(String name){
-
-        try (FileInputStream fis = new FileInputStream(name)) {
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            graph = (Graph) ois.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    private void saveObj(Object object, String objName){
-        try(FileOutputStream fos = new FileOutputStream(objName)){
-
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(object);
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * algoritmus pro získání rozdílu hodnot (1. zkušební verze)
+     * @param x
+     * @param y
+     * @return
+     */
     private int getDifference(int x, int y){
         //pokud vidí víc AP nebo nějaké nevidí, získá 20 trestných bodů
         final int PENALTY = 50;
@@ -621,6 +594,11 @@ public class Location extends Application{
         return difference;
     }
 
+    /**
+     * spoučtí Dijkstru a hledá nejkratší cestu mezi dměma vloženými vrcholy, kterou zobrazí na mapě pomocí zelených vrcholů
+     * @param start počáteční vrchol
+     * @param finish cílový vrchol
+     */
     private void findWay(Vertex start, Vertex finish){
         DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
         dijkstra.execute(start);

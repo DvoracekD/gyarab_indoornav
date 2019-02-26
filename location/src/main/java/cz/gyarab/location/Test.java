@@ -1,8 +1,14 @@
 package cz.gyarab.location;
 
 import java.util.ArrayList;
-import java.util.List;
 
+import cz.gyarab.location.signal.Entry;
+import cz.gyarab.location.signal.SignalEntry;
+
+/**
+ * Třida poskytující statický výčet dat
+ * Tato třída
+ */
 public class Test {
 
     static Entry testEntry;

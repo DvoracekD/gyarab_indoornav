@@ -67,6 +67,9 @@ public class AnalysisActivity extends AppCompatActivity {
         Toast.makeText(context, "Scanning WiFi ...", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * spustí se po obdržení výsledků skenu wifi
+     */
     private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -97,6 +100,9 @@ public class AnalysisActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * nastavuje barvu jednotlivým čtvercům podle rozdílu signálu od referenčního skenu
+     */
     private void setRects(){
         for (int i = 0; i < PLAN_HEIGHT; i++){
             for (int j = 0; j < PLAN_WIDTH; j++) {

@@ -1,4 +1,4 @@
-package cz.gyarab.location;
+package cz.gyarab.location.signal;
 
 import java.io.Serializable;
 

@@ -111,15 +111,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //temporary
-        findViewById(R.id.test_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Animation expandIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.expand_in);
-                findViewById(R.id.route_off_button).startAnimation(expandIn);
-            }
-        });
-
         //tlačítko pro smazání trasy
         final DrawLayer drawLayer = findViewById(R.id.map);
         routeOffButton = findViewById(R.id.route_off_button);

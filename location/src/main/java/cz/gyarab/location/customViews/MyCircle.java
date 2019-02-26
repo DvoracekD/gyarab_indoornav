@@ -1,4 +1,4 @@
-package cz.gyarab.location;
+package cz.gyarab.location.customViews;
 
 import cz.gyarab.location.dijkstra.Vertex;
 import javafx.scene.paint.Color;

@@ -1,4 +1,4 @@
-package cz.gyarab.location;
+package cz.gyarab.location.customViews;
 
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
