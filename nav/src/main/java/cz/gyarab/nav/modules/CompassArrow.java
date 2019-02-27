@@ -21,7 +21,7 @@ public class CompassArrow {
 
     /**
      * Bezprostředně po vytvoření instance musí následovat nastavení ImageView
-     * @param currentAzimuth prvotní natočení kompasu z intervalu <0;360> (0 směřuje na sever)
+     * @param currentAzimuth prvotní natočení kompasu z intervalu <0;360) (0 směřuje na sever)
      */
     public CompassArrow(float currentAzimuth) {
         this.currentAzimuth = currentAzimuth;
@@ -57,7 +57,6 @@ public class CompassArrow {
 
         //normalizace na orientovaný uhel, tak jak je v matematice
         final double normalAngle = Math.toRadians((90 + currentAzimuth)%360);
-
         float newX = this.x - (int)(stepSize * Math.cos(normalAngle));
         float newY = this.y - (int)(stepSize * Math.sin(normalAngle));
 

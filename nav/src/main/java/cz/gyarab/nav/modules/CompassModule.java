@@ -7,10 +7,15 @@ import android.hardware.SensorManager;
 
 /**
  * zdroj: https://github.com/iutinvg/compass
+ * Třída, která zprostředkovává aktuální azimut zařízení
  */
 public class CompassModule implements SensorEventListener {
 
     public interface CompassListener {
+        /**
+         * spustí se při otočení zařízení
+         * @param azimuth aktuální azimut zařízení
+         */
         void onNewAzimuth(float azimuth);
     }
 
@@ -71,13 +76,9 @@ public class CompassModule implements SensorEventListener {
                 mGravity[2] = alpha * mGravity[2] + (1 - alpha)
                         * event.values[2];
 
-                // mGravity = event.values;
-
-                // Log.e(TAG, Float.toString(mGravity[0]));
             }
 
             if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-                // mGeomagnetic = event.values;
 
                 mGeomagnetic[0] = alpha * mGeomagnetic[0] + (1 - alpha)
                         * event.values[0];
@@ -85,7 +86,6 @@ public class CompassModule implements SensorEventListener {
                         * event.values[1];
                 mGeomagnetic[2] = alpha * mGeomagnetic[2] + (1 - alpha)
                         * event.values[2];
-                // Log.e(TAG, Float.toString(event.values[0]));
 
             }
 
@@ -94,10 +94,8 @@ public class CompassModule implements SensorEventListener {
             if (success) {
                 float orientation[] = new float[3];
                 SensorManager.getOrientation(R, orientation);
-                // Log.d(TAG, "azimuth (rad): " + azimuth);
                 azimuth = (float) Math.toDegrees(orientation[0]); // orientation
                 azimuth = (azimuth + azimuthFix + 360) % 360;
-                // Log.d(TAG, "azimuth (deg): " + azimuth);
                 if (listener != null) {
                     listener.onNewAzimuth(azimuth);
                 }

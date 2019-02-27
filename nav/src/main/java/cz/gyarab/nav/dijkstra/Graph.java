@@ -39,7 +39,7 @@ public class Graph implements Serializable {
             return newVertex;
         }
 
-        //pokud jde vrchol grafu hlavních cest
+        //pokud jde o vrchol grafu hlavních cest
         for (Vertex vertex : vertexes){
             if (vertex.getX() == x && vertex.getY() == y)
                 return vertex;

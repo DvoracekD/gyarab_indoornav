@@ -5,9 +5,14 @@ import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.app.Application;
+import android.arch.lifecycle.AndroidViewModel;
+import android.arch.lifecycle.ViewModel;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
 import android.transition.TransitionManager;
@@ -17,6 +22,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
@@ -26,14 +32,16 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import cz.gyarab.nav.MainActivity;
 import cz.gyarab.nav.R;
 
 public class SearchBar extends ConstraintLayout {
 
+    private boolean open;
+    private SearchBarViewModel viewModel;
     private AutoCompleteTextView textView;
     private OptionSelectedListener listener;
     private ImageView background;
-    private boolean open = false;
     private int width;
 
     public interface OptionSelectedListener{
@@ -78,7 +86,10 @@ public class SearchBar extends ConstraintLayout {
         findViewById(R.id.delete_search).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                textView.setText("");
+                if (textView.getText().toString().equals(""))
+                    close();
+                else
+                    textView.setText("");
             }
         });
 
@@ -104,13 +115,6 @@ public class SearchBar extends ConstraintLayout {
                     close();
                 }
                 else open();
-
-//                textView.requestFocus();
-//                //otevřít klávesnici
-//                InputMethodManager inputMethodManager =
-//                        (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-//                inputMethodManager.toggleSoftInputFromWindow(textView.getApplicationWindowToken(),
-//                        InputMethodManager.SHOW_FORCED, 0);
             }
         });
 
@@ -122,15 +126,19 @@ public class SearchBar extends ConstraintLayout {
                 hideKeyboard();
                 textView.clearFocus();
                 listener.onOptionSelected(parent.getItemAtPosition(position).toString());
+                close();
             }
         });
 
         //skryje křížek a text view
         textView.setVisibility(INVISIBLE);
         findViewById(R.id.delete_search).setVisibility(INVISIBLE);
-
+        hideKeyboard();
     }
 
+    /**
+     * otervře search bar a klávesnici
+     */
     private void open() {
         open = true;
         GradientDrawable backgroundDrawable = (GradientDrawable) background.getBackground();
@@ -159,6 +167,8 @@ public class SearchBar extends ConstraintLayout {
             public void onAnimationEnd(Animator animation) {
                 findViewById(R.id.delete_search).setVisibility(VISIBLE);
                 textView.setVisibility(VISIBLE);
+                textView.requestFocus();
+                showKeyboard();
             }
             @Override
             public void onAnimationStart(Animator animation) {}
@@ -169,6 +179,9 @@ public class SearchBar extends ConstraintLayout {
         });
     }
 
+    /**
+     * zavře search bar, zasune klávesnici
+     */
     private void close() {
         open = false;
         GradientDrawable backgroundDrawable = (GradientDrawable) background.getBackground();
@@ -193,12 +206,29 @@ public class SearchBar extends ConstraintLayout {
 
         findViewById(R.id.delete_search).setVisibility(INVISIBLE);
         textView.setVisibility(INVISIBLE);
+        hideKeyboard();
+        textView.clearFocus();
     }
 
     public void hideKeyboard() {
-        if (!hasFocus())return;
         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(getWindowToken(), 0);
+        imm.hideSoftInputFromWindow(textView.getWindowToken(), 0);
+    }
+
+    public void showKeyboard(){
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+    }
+
+    public void setViewModel(SearchBarViewModel viewModel) {
+        this.viewModel = viewModel;
+    }
+
+    public static class SearchBarViewModel extends AndroidViewModel {
+
+        public SearchBarViewModel(@NonNull Application application) {
+            super(application);
+        }
     }
 
 }

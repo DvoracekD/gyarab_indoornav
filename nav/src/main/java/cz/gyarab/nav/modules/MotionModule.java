@@ -6,9 +6,18 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+/**
+ * Třída zodpovědná za uživatelův pohyb po mapě
+ */
 public class MotionModule implements SensorEventListener {
 
+    /**
+     * Listener pohybu
+     */
     public interface MotionListener{
+        /**
+         * spustí se při zaznamenání pohybu
+         */
         void onStep();
     }
 
@@ -24,7 +33,6 @@ public class MotionModule implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         Log.d("debug", "onTrigger: STEP");
-        //compassArrow.move(MainActivity.stepSize);
         if (listener != null)
             listener.onStep();
     }
@@ -34,7 +42,7 @@ public class MotionModule implements SensorEventListener {
     }
 
     public void start(){
-        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
+        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     public void stop() {

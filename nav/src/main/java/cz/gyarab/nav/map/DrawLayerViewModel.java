@@ -66,7 +66,7 @@ public class DrawLayerViewModel extends AndroidViewModel {
     }
 
     /**
-     * ze seznamu vrcholů vytvoří pole floatů pro android metoru vytvářející polyline
+     * ze seznamu vrcholů vytvoří pole floatů pro android metodu vytvářející polyline
      * výsledné pole obsahuje čtveřice floatů (x1, y1, x2, y2) představující počátečný a konečný bod jedné liny
      * @param path
      */
@@ -203,12 +203,12 @@ public class DrawLayerViewModel extends AndroidViewModel {
 
     /**
      * Listener, který se spustí při kliknutí na mapu
+     * nastavuje startovní a cílový vrchol
      */
     private class MapClickListener implements View.OnClickListener {
 
         @Override
         public void onClick(View v) {
-            //TODO přenést na samostatné vlákno
             //získání souřadnic kliknutí
             int[] plan = MapAdapter.getPlanField(lastXY[0], lastXY[1]);
             Log.d("debug", "onTouch: " + plan[0] + "   " + plan[1]);
