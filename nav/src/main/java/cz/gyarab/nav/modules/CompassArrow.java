@@ -19,6 +19,11 @@ public class CompassArrow {
     private float x;
     private float y;
 
+    private onMoveListener onMoveListener;
+    public interface onMoveListener{
+        void onMove();
+    }
+
     /**
      * Bezprostředně po vytvoření instance musí následovat nastavení ImageView
      * @param currentAzimuth prvotní natočení kompasu z intervalu <0;360) (0 směřuje na sever)
@@ -42,6 +47,19 @@ public class CompassArrow {
         image.setTranslationX(x - image.getLayoutParams().width/2f);
         image.setTranslationY(y - image.getLayoutParams().height/2f);
         setXY(x, y);
+        if (onMoveListener != null) onMoveListener.onMove();
+    }
+
+    public void setPositionAnimated(float x, float y){
+        ObjectAnimator xAni = ObjectAnimator.ofFloat(image, "translationX", this.x, x);
+        ObjectAnimator yAni = ObjectAnimator.ofFloat(image, "translationY", this.y, y);
+        setXY(x, y);
+
+        AnimatorSet animSetXY = new AnimatorSet();
+        animSetXY.playTogether(xAni, yAni);
+        animSetXY.setDuration(300);
+        animSetXY.start();
+        if (onMoveListener != null)onMoveListener.onMove();
     }
 
     public void refreshPosition(){
@@ -76,6 +94,7 @@ public class CompassArrow {
 
         //nastaví nové souřadnice
         setXY(newX, newY);
+        if (onMoveListener != null) onMoveListener.onMove();
 
         return locChange;
 
@@ -116,5 +135,9 @@ public class CompassArrow {
 
     public float getCenterY() {
         return y+getWidth()/2;
+    }
+
+    public void setOnMoveListener(CompassArrow.onMoveListener onMoveListener) {
+        this.onMoveListener = onMoveListener;
     }
 }

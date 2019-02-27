@@ -128,8 +128,6 @@ public class AnalysisActivity extends AppCompatActivity {
      */
     private int getDifference(int x, int y){
         if (entries[x][y] == null)return 255;
-        //pokud vidí víc AP nebo nějaké nevidí, získá 20 trestných bodů
-        //final int PENALTY = 50;
         //na začátku je zkopírováno pole s výsledky scanu, aby se s ním mohlo pracovat
         ArrayList<ScanResult> scanResults = new ArrayList<>(results);
         int difference = 0;

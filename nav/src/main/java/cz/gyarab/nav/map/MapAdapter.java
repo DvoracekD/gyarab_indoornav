@@ -7,8 +7,8 @@ public class MapAdapter {
 
     private static int mMap_width;
     private static int mMap_height;
-    private static final int PLAN_WIDTH = 36;//počet polí, ne které je plán rozdělen
-    private static final int PLAN_HEIGHT = 25;
+    public static final int PLAN_WIDTH = 36;//počet polí, ne které je plán rozdělen
+    public static final int PLAN_HEIGHT = 25;
     //počet pixelů na jeden díl plánu
     private static int onePlanUnit;
 

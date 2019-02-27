@@ -4,27 +4,13 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.content.Context;
 import android.hardware.SensorManager;
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-import android.widget.ArrayAdapter;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Scanner;
 
 import cz.gyarab.nav.dijkstra.DijkstraAlgorithm;
-import cz.gyarab.nav.dijkstra.Edge;
 import cz.gyarab.nav.dijkstra.Graph;
-import cz.gyarab.nav.dijkstra.Vertex;
 import cz.gyarab.nav.map.GraphLoader;
+import cz.gyarab.nav.location.LocationModule;
+import cz.gyarab.nav.map.MapAdapter;
 import cz.gyarab.nav.modules.MotionModule;
 import cz.gyarab.nav.modules.CompassArrow;
 import cz.gyarab.nav.modules.CompassModule;
@@ -34,9 +20,12 @@ public class MainViewModel extends AndroidViewModel {
     private CompassArrow compassArrow;
     private CompassModule compassModule;
     private MotionModule motionModule;
+    private LocationModule locationModule;
     private Graph mGraph;
     private DijkstraAlgorithm dijkstra;
     public boolean routeOffButtonHidden = false;
+    //temporery
+    boolean useLocation = true;
 
     private GraphLoader.GraphLoadedListener graphLoadedListener;
 
@@ -47,6 +36,15 @@ public class MainViewModel extends AndroidViewModel {
         compassArrow = new CompassArrow(0);
         compassModule = new CompassModule(sensorManager);
         motionModule = new MotionModule(sensorManager);
+
+        //modul location
+        locationModule = LocationModule.getInstance(getApplication());
+        locationModule.setListener(new LocationModule.ScannedListener() {
+            @Override
+            public void onScanned(int[] minDiffCoords) {
+                if (useLocation)compassArrow.setPositionAnimated(MapAdapter.getMapCoordinate(minDiffCoords[0]), MapAdapter.getMapCoordinate(minDiffCoords[1]));
+            }
+        });
 
         //vytvoření instance GraphLoaderu
         GraphLoader graphLoader = new GraphLoader(getApplication());
@@ -93,6 +91,7 @@ public class MainViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
+        locationModule.setLive(false);
         compassArrow = null;
         compassModule = null;
         motionModule = null;

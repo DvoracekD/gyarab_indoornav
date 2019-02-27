@@ -77,7 +77,7 @@ public class SearchBar extends ConstraintLayout {
         //pozadi
         background = findViewById(R.id.search_background);
         GradientDrawable backgroundDrawable = new GradientDrawable();
-        backgroundDrawable.setCornerRadius(80);
+        backgroundDrawable.setCornerRadius(100);
         backgroundDrawable.setColor(Color.WHITE);
         backgroundDrawable.setShape(GradientDrawable.RECTANGLE);
         background.setBackground(backgroundDrawable);
