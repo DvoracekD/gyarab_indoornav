@@ -292,6 +292,7 @@ public class MainActivity extends AppCompatActivity {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
                 } else {
+                    viewModel.disableLocation();
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }

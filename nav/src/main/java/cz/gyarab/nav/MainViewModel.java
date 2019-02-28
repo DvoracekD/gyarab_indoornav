@@ -23,7 +23,8 @@ public class MainViewModel extends AndroidViewModel {
     private LocationModule locationModule;
     private Graph mGraph;
     private DijkstraAlgorithm dijkstra;
-    public boolean routeOffButtonHidden = false;
+    boolean routeOffButtonHidden = false;
+    private boolean enableLocation = true;
     //temporery
     boolean useLocation = true;
 
@@ -41,13 +42,15 @@ public class MainViewModel extends AndroidViewModel {
         compassModule.setAzimuthFix(60);
 
         //modul location
-        locationModule = LocationModule.getInstance(getApplication());
-        locationModule.setListener(new LocationModule.ScannedListener() {
-            @Override
-            public void onScanned(int[] minDiffCoords) {
-                if (useLocation)compassArrow.setPositionAnimated(MapAdapter.getMapCoordinate(minDiffCoords[0]), MapAdapter.getMapCoordinate(minDiffCoords[1]));
-            }
-        });
+        if (enableLocation) {
+            locationModule = LocationModule.getInstance(getApplication());
+            locationModule.setListener(new LocationModule.ScannedListener() {
+                @Override
+                public void onScanned(int[] minDiffCoords) {
+                    if (useLocation)compassArrow.setPositionAnimated(MapAdapter.getMapCoordinate(minDiffCoords[0]), MapAdapter.getMapCoordinate(minDiffCoords[1]));
+                }
+            });
+        }
 
         //vytvoření instance GraphLoaderu
         GraphLoader graphLoader = new GraphLoader(getApplication());
@@ -65,6 +68,10 @@ public class MainViewModel extends AndroidViewModel {
         });
         graphLoader.execute("map_graph.json");
 
+    }
+
+    public void disableLocation(){
+        enableLocation = false;
     }
 
     public void setGraphLoadedListener(GraphLoader.GraphLoadedListener graphLoadedListener) {

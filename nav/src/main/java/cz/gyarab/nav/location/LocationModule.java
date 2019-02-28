@@ -74,13 +74,13 @@ public class LocationModule {
                     scanWifi(context);
                     //rozestupy mezi jednotlivými skeny (10s) - uspora beterie
                     try {
-                        Thread.sleep(5000);
+                        Thread.sleep(10000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
             }
-        }).start();
+        }, "location_thread").start();
     }
 
     public void scanWifi(final Context context) {
@@ -102,13 +102,13 @@ public class LocationModule {
     };
 
     /**
-     * nastavuje barvu jednotlivým čtvercům podle rozdílu signálu od referenčního skenu
+     * hledá referenční čtverec s nejmenším rozdílem
      */
     private void setRects(){
         for (int i = 0; i < MapAdapter.PLAN_HEIGHT; i++){
             for (int j = 0; j < MapAdapter.PLAN_WIDTH; j++) {
                 int difference = getDifference(j, i);
-                if (difference < minDiff){
+                if (difference > minDiff){
                     minDiff = difference;
                     minDiffCoords[0] = j;
                     minDiffCoords[1] = i;
@@ -119,8 +119,6 @@ public class LocationModule {
         System.out.println("změna");
         if (listener!=null)
             listener.onScanned(minDiffCoords);
-
-        minDiff = Integer.MAX_VALUE;
     }
 
     /**
