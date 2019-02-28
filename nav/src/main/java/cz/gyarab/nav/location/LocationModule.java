@@ -35,7 +35,7 @@ public class LocationModule {
     private List<ScanResult> results;
     private Entry entries[][] = new Entry[MapAdapter.PLAN_WIDTH][MapAdapter.PLAN_HEIGHT];
     private  final String SSID = "GYM_ARABSKA";
-    private int maxDiff = Integer.MAX_VALUE;
+    private int minDiff = Integer.MAX_VALUE;
     private int[] minDiffCoords = new int[2];
 
     private ScannedListener listener;
@@ -74,7 +74,7 @@ public class LocationModule {
                     scanWifi(context);
                     //rozestupy mezi jednotlivými skeny (10s) - uspora beterie
                     try {
-                        Thread.sleep(10000);
+                        Thread.sleep(5000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -108,8 +108,8 @@ public class LocationModule {
         for (int i = 0; i < MapAdapter.PLAN_HEIGHT; i++){
             for (int j = 0; j < MapAdapter.PLAN_WIDTH; j++) {
                 int difference = getDifference(j, i);
-                if (difference > maxDiff){
-                    maxDiff = difference;
+                if (difference < minDiff){
+                    minDiff = difference;
                     minDiffCoords[0] = j;
                     minDiffCoords[1] = i;
                 }
@@ -119,6 +119,8 @@ public class LocationModule {
         System.out.println("změna");
         if (listener!=null)
             listener.onScanned(minDiffCoords);
+
+        minDiff = Integer.MAX_VALUE;
     }
 
     /**

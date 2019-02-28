@@ -51,6 +51,8 @@ public class CompassArrow {
     }
 
     public void setPositionAnimated(float x, float y){
+        x -= image.getLayoutParams().width/2f;
+        y -= image.getLayoutParams().height/2f;
         ObjectAnimator xAni = ObjectAnimator.ofFloat(image, "translationX", this.x, x);
         ObjectAnimator yAni = ObjectAnimator.ofFloat(image, "translationY", this.y, y);
         setXY(x, y);

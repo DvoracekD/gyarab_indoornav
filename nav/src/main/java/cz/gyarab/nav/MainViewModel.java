@@ -37,6 +37,9 @@ public class MainViewModel extends AndroidViewModel {
         compassModule = new CompassModule(sensorManager);
         motionModule = new MotionModule(sensorManager);
 
+        //nastaví otočení plánu od azimutu 0
+        compassModule.setAzimuthFix(60);
+
         //modul location
         locationModule = LocationModule.getInstance(getApplication());
         locationModule.setListener(new LocationModule.ScannedListener() {
