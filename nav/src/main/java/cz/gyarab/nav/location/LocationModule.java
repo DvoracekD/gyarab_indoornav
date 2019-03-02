@@ -108,7 +108,7 @@ public class LocationModule {
         for (int i = 0; i < MapAdapter.PLAN_HEIGHT; i++){
             for (int j = 0; j < MapAdapter.PLAN_WIDTH; j++) {
                 int difference = getDifference(j, i);
-                if (difference > minDiff){
+                if (difference < minDiff){
                     minDiff = difference;
                     minDiffCoords[0] = j;
                     minDiffCoords[1] = i;
@@ -119,6 +119,8 @@ public class LocationModule {
         System.out.println("změna");
         if (listener!=null)
             listener.onScanned(minDiffCoords);
+
+        minDiff = Integer.MAX_VALUE;
     }
 
     /**
