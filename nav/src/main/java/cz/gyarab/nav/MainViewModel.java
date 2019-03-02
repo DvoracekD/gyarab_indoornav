@@ -8,12 +8,12 @@ import android.support.annotation.NonNull;
 
 import cz.gyarab.nav.dijkstra.DijkstraAlgorithm;
 import cz.gyarab.nav.dijkstra.Graph;
-import cz.gyarab.nav.map.GraphLoader;
 import cz.gyarab.nav.location.LocationModule;
+import cz.gyarab.nav.map.GraphLoader;
 import cz.gyarab.nav.map.MapAdapter;
-import cz.gyarab.nav.modules.MotionModule;
 import cz.gyarab.nav.modules.CompassArrow;
 import cz.gyarab.nav.modules.CompassModule;
+import cz.gyarab.nav.modules.MotionModule;
 
 public class MainViewModel extends AndroidViewModel {
 
@@ -68,6 +68,10 @@ public class MainViewModel extends AndroidViewModel {
         });
         graphLoader.execute("map_graph.json");
 
+    }
+
+    public LocationModule getLocationModule() {
+        return locationModule;
     }
 
     public void disableLocation(){

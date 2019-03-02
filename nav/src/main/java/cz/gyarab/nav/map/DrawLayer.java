@@ -3,12 +3,8 @@ package cz.gyarab.nav.map;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Point;
-import android.util.AttributeSet;
 import android.support.v7.widget.AppCompatImageView;
-
-import java.util.LinkedList;
+import android.util.AttributeSet;
 
 import cz.gyarab.nav.MainActivity;
 import cz.gyarab.nav.dijkstra.Vertex;

@@ -3,20 +3,19 @@ package cz.gyarab.nav;
 import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.otaliastudios.zoom.ZoomLayout;
 
@@ -27,9 +26,9 @@ import cz.gyarab.nav.dijkstra.Graph;
 import cz.gyarab.nav.map.DrawLayer;
 import cz.gyarab.nav.map.DrawLayerViewModel;
 import cz.gyarab.nav.map.GraphLoader;
+import cz.gyarab.nav.map.MapAdapter;
 import cz.gyarab.nav.modules.CompassArrow;
 import cz.gyarab.nav.modules.CompassModule;
-import cz.gyarab.nav.map.MapAdapter;
 import cz.gyarab.nav.modules.MotionModule;
 import cz.gyarab.nav.modules.SearchBar;
 
@@ -71,6 +70,21 @@ public class MainActivity extends AppCompatActivity {
                 centerCamera();
             }
         });
+        //po dlouhém stisku se funkcionalita vypne/zapne
+        compassArrow.getImage().setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                viewModel.useLocation = !viewModel.useLocation;
+                if (viewModel.useLocation){
+                    viewModel.getLocationModule().start();
+                    Toast.makeText(getApplicationContext(), getString(R.string.wifi_on), Toast.LENGTH_LONG).show();
+                }else{
+                    viewModel.getLocationModule().stop();
+                    Toast.makeText(getApplicationContext(), getString(R.string.wifi_off), Toast.LENGTH_LONG).show();
+                }
+                return true;
+            }
+        });
 
         //inicializace modulu kompasu
         compassModule = viewModel.getCompassModule();
@@ -108,25 +122,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 //ekvivalent 0.5m v pixelech na plánu
                 stepSize = width / 36 / 5;
-            }
-        });
-
-        //temporary
-        findViewById(R.id.step).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                doStep();
-                centerCamera();
-            }
-        });
-
-        //temporary
-        CheckBox checkBox = findViewById(R.id.use_location);
-        checkBox.setChecked(true);
-        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                viewModel.useLocation = isChecked;
             }
         });
 

@@ -111,6 +111,10 @@ public class CompassArrow {
 
     }
 
+    public ImageView getImage() {
+        return image;
+    }
+
     public boolean checkFresh(){
         if (fresh){
             fresh = false;

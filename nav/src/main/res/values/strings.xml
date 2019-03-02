@@ -3,4 +3,6 @@
     <string name="button">button</string>
     <string name="step">STEP</string>
     <string name="image">image</string>
+    <string name="wifi_on">Hledání polohy zapnuto</string>
+    <string name="wifi_off">Hledání polohy vypnuto</string>
 </resources>

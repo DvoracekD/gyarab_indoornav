@@ -67,6 +67,11 @@ public class LocationModule {
 
         loadJSON("reference_data.json");
 
+        start();
+    }
+
+    public void start(){
+        live = true;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -81,6 +86,10 @@ public class LocationModule {
                 }
             }
         }, "location_thread").start();
+    }
+
+    public void stop(){
+        live = false;
     }
 
     public void scanWifi(final Context context) {

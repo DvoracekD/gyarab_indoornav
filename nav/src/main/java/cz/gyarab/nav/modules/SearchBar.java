@@ -1,30 +1,21 @@
 package cz.gyarab.nav.modules;
 
 import android.animation.Animator;
-import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
-import android.arch.lifecycle.ViewModel;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
-import android.support.constraint.ConstraintSet;
-import android.transition.TransitionManager;
 import android.util.AttributeSet;
-import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -32,7 +23,6 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import cz.gyarab.nav.MainActivity;
 import cz.gyarab.nav.R;
 
 public class SearchBar extends ConstraintLayout {
@@ -118,13 +108,11 @@ public class SearchBar extends ConstraintLayout {
             }
         });
 
-        //po vybríní možnosti
+        //po vybrání možnosti
         textView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 System.out.println(parent.getItemAtPosition(position));
-                hideKeyboard();
-                textView.clearFocus();
                 listener.onOptionSelected(parent.getItemAtPosition(position).toString());
                 close();
             }
@@ -184,6 +172,7 @@ public class SearchBar extends ConstraintLayout {
      */
     private void close() {
         open = false;
+        hideKeyboard();
         GradientDrawable backgroundDrawable = (GradientDrawable) background.getBackground();
         ObjectAnimator cornerAnimation =
                 ObjectAnimator.ofFloat(backgroundDrawable, "cornerRadius", 32, 100);
@@ -206,7 +195,6 @@ public class SearchBar extends ConstraintLayout {
 
         findViewById(R.id.delete_search).setVisibility(INVISIBLE);
         textView.setVisibility(INVISIBLE);
-        hideKeyboard();
         textView.clearFocus();
     }
 
